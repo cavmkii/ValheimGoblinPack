@@ -7,7 +7,7 @@ A BepInEx/Jötunn mod that adds two unique, persistent NPCs to a Valheim world.
 A small Fuling (0.8x scale) who roams the whole map looking for Sean.
 
 - **Wanders the map.** He travels between far-off points and goes to Sean's last known position about half the time (`Joe.SeanSeekChance`). He avoids the Ashlands, the Deep North and open ocean.
-- **Insults you.** Every 18–40 s, if a player is within 40 m, he shouts an insult at the nearest player by name or yells about Sean.
+- **Only talks about Sean or the Baby Wars.** Every 18–40 s, if a player is within 40 m, he shouts a line, often using the nearest player's name. All his dialogue is in `BepInEx/config/GoblinPack/joe_lines.txt` (created on first run). Edit it, then run `goblinpack_reloadlines` in the console.
 - **Throws up.** Every 1–2.5 minutes, if a player is within 40 m, he stops and vomits, using the same effect as eating Pukeberries (`Joe.PukeEnabled`, `Joe.PukeIntervalMin/Max`).
 - **Steals.** He walks up to a nearby player, pickpockets a random non-equipped item (up to 10 from a stack), gloats and runs off. Each theft is stored on Joe, and killing him drops everything he stole at its original quality.
 - **Passive until hit.** Joe doesn't target a player until that player damages him. He then stays hostile to that player for 90 s (`Joe.ProvokeSeconds`). Other players stay safe unless they hit him too.
@@ -17,7 +17,7 @@ A small Fuling (0.8x scale) who roams the whole map looking for Sean.
   - **Bosses:** the number of the 7 bosses defeated in the world.
 
   The default uses whichever is higher. Both map to 0–1, which sets his health (0.6x–10x a Fuling) and his damage (0.25x–2.5x, low at the start because Fuling weapons are Plains-tier). His hover name shows `Joe (Lv N)`.
-- **Respawns.** The server keeps exactly one Joe. Ten minutes after he dies, he reappears 60–140 m from a random online player.
+- **Unique, and respawns.** The server enforces exactly one Joe (and one Sean): every few seconds it removes any extra copy, including ones made with `spawn`. When Joe dies he disappears, and ten minutes later he reappears 60–140 m from a random online player.
 
 ## Sean
 
@@ -48,7 +48,7 @@ When the two get within 35 m of each other, they fight for 45 s:
 - **Joe** throws fireballs and calls down meteors.
 - **Sean** throws ice shards, lightning strikes (Eikthyr's lightning effect) and hail volleys.
 
-Missed spells land around the arena and leave **craters**. These are real terrain edits that persist like pickaxe digs, capped at 14 per fight. Anyone caught in a blast takes damage (50% by default, `Fight.BystanderDamageMultiplier`).
+Every spell is an area-of-effect blast, and plenty of them miss and land around the arena, so anyone nearby gets caught in it. Bystanders take 50% damage by default (`Fight.BystanderDamageMultiplier`). The spells don't change the terrain.
 
 Neither of them can drop the other below 15% health, so the fight always ends in a stalemate. Joe then storms off. After a 10-minute cooldown they can fight again. Players nearby get a centre-screen warning when a fight starts.
 
@@ -80,22 +80,23 @@ This writes `dist\GoblinPack-0.1.0.zip`; the build output prints the full path. 
 
 ## Config
 
-`BepInEx/config/cavmkii.goblinpack.cfg`. Every setting is admin-only, so the server's values sync to clients. `Fight.CraterScale` is read at startup.
+`BepInEx/config/cavmkii.goblinpack.cfg`. Every setting is admin-only, so the server's values sync to clients.
 
 ## Console commands
 
 - `goblinpack_where`: Joe's and Sean's last known positions, and whether Joe is enraged.
 - `goblinpack_summon joe|sean`: cheat command (devcommands; the server also checks that you're an admin). Replaces Joe or Sean with a fresh one in front of you. Handy for testing a fight: summon both.
+- `goblinpack_reloadlines`: reload Joe's dialogue from `joe_lines.txt`.
 
 ## How it works (code map)
 
 | File | Role |
 |---|---|
 | `GoblinPackPlugin.cs` | Entry point. Patches each Harmony class separately, so a game update that breaks one signature only disables that feature. |
-| `Content.cs` | Clones `Goblin` → Joe and `DvergerMageIce` → Sean with Jötunn, builds the items, status effects and Sean's `Trader` stock, and registers the crater `TerrainOp` prefabs. |
+| `Content.cs` | Clones `Goblin` → Joe and `DvergerMageIce` → Sean with Jötunn, builds the items, status effects and Sean's `Trader` stock. |
 | `JoeBrain.cs`, `SeanBrain.cs` | Behaviour on top of vanilla `MonsterAI`. Runs only on the client that owns the NPC, and keeps shared state (provokers, stash, fight timers) on the ZDO so nothing is lost when ownership moves. |
 | `Wander.cs` | Long-distance travel by sliding `BaseAI.m_spawnPoint` toward a destination, so vanilla pathfinding and animation do the walking. |
-| `Fight.cs`, `SpellFx.cs` | The duel. Joe's owner decides every spell and broadcasts it. Every client draws inert copies of vanilla projectile and lightning visuals. The authority applies damage and spawns craters. |
+| `Fight.cs`, `SpellFx.cs` | The duel. Joe's owner decides every spell and broadcasts it. Every client draws inert copies of vanilla projectile and lightning visuals. The authority applies the area damage. |
 | `WorldDirector.cs` | Server-only. One Joe and one Sean per world, death detection (ZDO gone), respawn timers, position broadcasts. State is in `BepInEx/config/GoblinPack/<worldUID>.txt`. |
 | `Patches.cs` | `BaseAI.IsEnemy` (Joe passive), `Character.RPC_Damage` (provocation), `Character.Damage` (scaling and duel floor), `Character.OnDeath` (stash drop), hover text, `Trader.Update` (skipped for Sean), `Chat.SendText` (rage phrases). |
 

@@ -7,7 +7,7 @@ namespace GoblinPack
     /// <summary>
     /// Client-side visuals for the fight. Borrows the look of vanilla staff projectiles and Eikthyr's
     /// lightning, spawned as local-only copies with their networking and gameplay components removed,
-    /// so nothing here can deal damage or create world objects. Damage and craters are done by
+    /// so nothing here can deal damage or create world objects. Damage is done by
     /// <see cref="Fight"/> on the authority only.
     /// </summary>
     internal static class SpellFx
@@ -32,7 +32,6 @@ namespace GoblinPack
             public GameObject Bolt;
             public EffectList HitEffects;
             public GameObject ImpactPrefab;
-            public GameObject Crater;
         }
 
         private static Profile[] _profiles;
@@ -69,27 +68,27 @@ namespace GoblinPack
             _profiles[(int)Spell.JoeFireball] = new Profile
             {
                 Element = Element.Fire, Radius = 4f, DuelPercent = 0.04f, BaseDamage = 25f, Push = 40f, Speed = 25f, Arc = 3f,
-                Bolt = fireball?.gameObject, HitEffects = fireball?.m_hitEffects, Crater = Content.CraterSmall,
+                Bolt = fireball?.gameObject, HitEffects = fireball?.m_hitEffects,
             };
             _profiles[(int)Spell.JoeMeteor] = new Profile
             {
                 Element = Element.Fire, Radius = 6f, DuelPercent = 0.07f, BaseDamage = 45f, Push = 80f, Speed = 30f, Arc = 0f, Scale = 2.2f,
-                Bolt = fireball?.gameObject, HitEffects = fireball?.m_hitEffects, Crater = Content.CraterLarge,
+                Bolt = fireball?.gameObject, HitEffects = fireball?.m_hitEffects,
             };
             _profiles[(int)Spell.SeanIceShard] = new Profile
             {
                 Element = Element.Frost, Radius = 3.5f, DuelPercent = 0.04f, BaseDamage = 25f, Push = 30f, Speed = 30f, Arc = 1.5f,
-                Bolt = ice?.gameObject, HitEffects = ice?.m_hitEffects, Crater = Content.CraterSmall,
+                Bolt = ice?.gameObject, HitEffects = ice?.m_hitEffects,
             };
             _profiles[(int)Spell.SeanLightning] = new Profile
             {
                 Element = Element.Lightning, Radius = 5f, DuelPercent = 0.06f, BaseDamage = 40f, Push = 60f, Speed = 250f, Arc = 0f,
-                Bolt = null, HitEffects = lightning == null ? ice?.m_hitEffects : null, ImpactPrefab = lightning, Crater = Content.CraterMedium,
+                Bolt = null, HitEffects = lightning == null ? ice?.m_hitEffects : null, ImpactPrefab = lightning,
             };
             _profiles[(int)Spell.SeanHail] = new Profile
             {
                 Element = Element.Frost, Radius = 2.5f, DuelPercent = 0.015f, BaseDamage = 12f, Push = 15f, Speed = 35f, Arc = 0f, Scale = 1.5f,
-                Bolt = ice?.gameObject, HitEffects = ice?.m_hitEffects, Crater = Content.CraterSmall,
+                Bolt = ice?.gameObject, HitEffects = ice?.m_hitEffects,
             };
         }
 

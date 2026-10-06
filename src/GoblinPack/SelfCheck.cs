@@ -1,68 +1,220 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Reflection.Emit;
 
 namespace GoblinPack
 {
     /// <summary>
-    /// The mod compiles against publicized game assemblies (everything public), but the game's Mono
-    /// runtime still enforces method visibility when it JIT-compiles a caller. A private game method
-    /// therefore only fails the first time the code path that calls it runs, which may be rare
-    /// (a theft, a fight). Compiling every method up front surfaces all of those at startup.
+    /// The mod compiles against publicized game assemblies (everything public), but the game's runtime
+    /// enforces real visibility on both methods and fields when a method first runs, which can be
+    /// hours into play. This reads GoblinPack's own IL at startup, finds every game member it
+    /// references, and checks that member's visibility in the game DLLs actually loaded, so every
+    /// offending reference is listed in the log immediately.
     /// </summary>
     internal static class SelfCheck
     {
         private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic |
                                          BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
+        private static readonly Dictionary<short, OpCode> OpCodesByValue = BuildOpCodes();
+
         public static void Run()
         {
-            int checkedCount = 0;
-            int failures = 0;
-            foreach (Type type in typeof(SelfCheck).Assembly.GetTypes())
+            var problems = new SortedSet<string>();
+            int methods = 0;
+            Type[] types;
+            try
             {
-                if (type.IsGenericTypeDefinition)
-                {
-                    continue;
-                }
-                foreach (MethodBase method in Methods(type))
-                {
-                    if (method.IsAbstract || method.ContainsGenericParameters || method.GetMethodBody() == null)
-                    {
-                        continue;
-                    }
-                    checkedCount++;
-                    try
-                    {
-                        RuntimeHelpers.PrepareMethod(method.MethodHandle);
-                    }
-                    catch (Exception e)
-                    {
-                        failures++;
-                        Exception root = e.InnerException ?? e;
-                        GoblinPackPlugin.Log.LogError($"Self-check: {type.FullName}.{method.Name} can't run on this game version: {root.GetType().Name}: {root.Message}");
-                    }
-                }
+                types = typeof(SelfCheck).Assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                types = e.Types;
             }
 
-            if (failures == 0)
+            var skipped = new List<string>();
+            foreach (Type type in types)
             {
-                GoblinPackPlugin.Log.LogInfo($"Self-check: compiled {checkedCount} methods, no access errors.");
+                if (type == null)
+                {
+                    skipped.Add("?");
+                    continue;
+                }
+                try
+                {
+                    foreach (MethodBase method in Methods(type))
+                    {
+                        methods++;
+                        CheckMethod(method, problems);
+                    }
+                }
+                catch (Exception)
+                {
+                    skipped.Add(type.Name);
+                }
             }
-            else
+            if (skipped.Count > 0)
             {
-                GoblinPackPlugin.Log.LogError($"Self-check: {failures} of {checkedCount} methods reference game members this version doesn't allow. Please report the lines above.");
+                GoblinPackPlugin.Log.LogWarning($"Self-check: couldn't inspect {skipped.Count} type(s): {string.Join(", ", skipped.ToArray())}");
+            }
+
+            if (problems.Count == 0)
+            {
+                GoblinPackPlugin.Log.LogInfo($"Self-check: scanned {methods} methods, every game member they use is accessible.");
+                return;
+            }
+            foreach (string problem in problems)
+            {
+                GoblinPackPlugin.Log.LogError($"Self-check: {problem}");
+            }
+            GoblinPackPlugin.Log.LogError($"Self-check: {problems.Count} inaccessible game member(s); those features will fail on this game version. Please report the lines above.");
+        }
+
+        private static IEnumerable<MethodBase> Methods(Type type)
+        {
+            foreach (MethodInfo m in type.GetMethods(All))
+            {
+                yield return m;
+            }
+            foreach (ConstructorInfo c in type.GetConstructors(All))
+            {
+                yield return c;
             }
         }
 
-        private static MethodBase[] Methods(Type type)
+        private static void CheckMethod(MethodBase method, SortedSet<string> problems)
         {
-            MethodInfo[] methods = type.GetMethods(All);
-            ConstructorInfo[] ctors = type.GetConstructors(All);
-            var result = new MethodBase[methods.Length + ctors.Length];
-            methods.CopyTo(result, 0);
-            ctors.CopyTo(result, methods.Length);
-            return result;
+            byte[] il;
+            try
+            {
+                il = method.GetMethodBody()?.GetILAsByteArray();
+            }
+            catch
+            {
+                return;
+            }
+            if (il == null)
+            {
+                return;
+            }
+
+            Type[] typeArgs = method.DeclaringType != null && method.DeclaringType.IsGenericType ? method.DeclaringType.GetGenericArguments() : null;
+            Type[] methodArgs = method.IsGenericMethod ? method.GetGenericArguments() : null;
+
+            int pos = 0;
+            while (pos < il.Length)
+            {
+                short value = il[pos++];
+                if (value == 0xFE && pos < il.Length)
+                {
+                    value = (short)(0xFE00 | il[pos++]);
+                }
+                if (!OpCodesByValue.TryGetValue(value, out OpCode op))
+                {
+                    return; // Unknown opcode; stop scanning this method rather than misread it.
+                }
+
+                switch (op.OperandType)
+                {
+                    case OperandType.InlineField:
+                    case OperandType.InlineMethod:
+                    case OperandType.InlineTok:
+                        int token = BitConverter.ToInt32(il, pos);
+                        CheckToken(method, token, typeArgs, methodArgs, problems);
+                        pos += 4;
+                        break;
+                    case OperandType.InlineNone:
+                        break;
+                    case OperandType.ShortInlineBrTarget:
+                    case OperandType.ShortInlineI:
+                    case OperandType.ShortInlineVar:
+                        pos += 1;
+                        break;
+                    case OperandType.InlineVar:
+                        pos += 2;
+                        break;
+                    case OperandType.InlineI8:
+                    case OperandType.InlineR:
+                        pos += 8;
+                        break;
+                    case OperandType.InlineSwitch:
+                        int count = BitConverter.ToInt32(il, pos);
+                        pos += 4 + count * 4;
+                        break;
+                    default:
+                        pos += 4;
+                        break;
+                }
+            }
+        }
+
+        private static void CheckToken(MethodBase caller, int token, Type[] typeArgs, Type[] methodArgs, SortedSet<string> problems)
+        {
+            MemberInfo member;
+            try
+            {
+                member = caller.Module.ResolveMember(token, typeArgs, methodArgs);
+            }
+            catch
+            {
+                return;
+            }
+            Type owner = member?.DeclaringType;
+            if (owner == null || owner.Assembly == typeof(SelfCheck).Assembly || !IsGameAssembly(owner.Assembly))
+            {
+                return;
+            }
+
+            bool accessible;
+            switch (member)
+            {
+                case FieldInfo f:
+                    accessible = f.IsPublic || ((f.IsFamily || f.IsFamilyOrAssembly) && Derives(caller.DeclaringType, owner));
+                    break;
+                case MethodBase m:
+                    accessible = m.IsPublic || ((m.IsFamily || m.IsFamilyOrAssembly) && Derives(caller.DeclaringType, owner));
+                    break;
+                default:
+                    return;
+            }
+
+            if (!accessible)
+            {
+                string kind = member is FieldInfo ? "field" : "method";
+                problems.Add($"{kind} {owner.Name}.{member.Name} is not public in the game (used by {caller.DeclaringType?.Name}.{caller.Name})");
+            }
+        }
+
+        private static bool IsGameAssembly(Assembly assembly)
+        {
+            string name = assembly.GetName().Name;
+            return name.StartsWith("assembly_", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool Derives(Type type, Type baseType)
+        {
+            for (Type t = type; t != null; t = t.DeclaringType)
+            {
+                if (t.IsSubclassOf(baseType))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static Dictionary<short, OpCode> BuildOpCodes()
+        {
+            var map = new Dictionary<short, OpCode>();
+            foreach (FieldInfo field in typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static))
+            {
+                if (field.GetValue(null) is OpCode op)
+                {
+                    map[op.Value] = op;
+                }
+            }
+            return map;
         }
     }
 }

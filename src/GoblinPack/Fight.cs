@@ -14,8 +14,7 @@ namespace GoblinPack
 
     /// <summary>
     /// Joe vs Sean. Joe's owner is the single authority: it picks spells, broadcasts them so every
-    /// client draws the same bolt, then applies damage and terrain craters itself when each lands.
-    /// Craters are registered TerrainOp prefabs, so vanilla terrain sync replicates them.
+    /// client draws the same bolt, then applies the area damage itself when each lands.
     /// </summary>
     internal class Fight
     {
@@ -26,7 +25,6 @@ namespace GoblinPack
 
         private readonly JoeBrain _joe;
         private float _nextCast;
-        private int _craters;
         private bool _joeTurn;
 
         public Fight(JoeBrain joe)
@@ -60,7 +58,6 @@ namespace GoblinPack
             }
 
             Zdo.Set(Keys.FightEnd, (float)(GoblinState.Now + Cfg.FightSeconds.Value));
-            _craters = 0;
             _nextCast = Time.time + 2.5f;
             _joe.Wander.ClearDestination();
 
@@ -143,7 +140,7 @@ namespace GoblinPack
                 }
 
                 Vector3 aim = target.transform.position;
-                // Plenty of misses: that's where the craters around the arena come from.
+                // Plenty of misses, so the blasts spread around the arena and catch bystanders.
                 float missChance = spell == Spell.SeanHail ? 0.7f : 0.35f;
                 if (Random.value < missChance)
                 {
@@ -196,12 +193,6 @@ namespace GoblinPack
             yield return new WaitForSeconds(delay);
 
             SpellFx.Profile profile = SpellFx.GetProfile(spell);
-
-            if (Cfg.FightCraters.Value && _craters < Cfg.MaxCratersPerFight.Value && profile.Crater != null)
-            {
-                _craters++;
-                Object.Instantiate(profile.Crater, point, Quaternion.identity);
-            }
 
             float level = PowerLevel.Evaluate(point);
             foreach (Character victim in Character.GetAllCharacters())
