@@ -1,0 +1,6 @@
+<Project>
+  <!-- JotunnLib reads $(SolutionDir)Environment.props; make that work for `dotnet build` on the csproj too. -->
+  <PropertyGroup>
+    <SolutionDir Condition="'$(SolutionDir)' == '' OR '$(SolutionDir)' == '*Undefined*'">$(MSBuildThisFileDirectory)</SolutionDir>
+  </PropertyGroup>
+</Project>
