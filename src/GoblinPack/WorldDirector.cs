@@ -82,8 +82,23 @@ namespace GoblinPack
         private static void Check(Tracked t)
         {
             ZDO zdo = t.Id.IsNone() ? null : ZDOMan.instance.GetZDO(t.Id);
+            if (zdo == null)
+            {
+                // The remembered id can go stale (e.g. ids reassigned when a world loads), so before
+                // declaring it gone, look for any saved object of the right prefab.
+                zdo = FindByPrefab(t);
+                if (zdo != null)
+                {
+                    t.Id = zdo.m_uid;
+                    Save();
+                }
+            }
             if (zdo != null)
             {
+                if (!t.Alive)
+                {
+                    GoblinPackPlugin.Log.LogInfo($"Tracking {t.Key} at {zdo.GetPosition().ToString("F0")}.");
+                }
                 t.Alive = true;
                 t.LastPos = zdo.GetPosition();
                 return;
@@ -92,11 +107,12 @@ namespace GoblinPack
             if (t.Alive || !t.Id.IsNone())
             {
                 // It existed and now its ZDO is gone: killed (or removed by an admin).
+                string where = t.Alive ? $"last seen at {t.LastPos.ToString("F0")}" : "missing from the saved world";
                 t.Alive = false;
                 t.Id = ZDOID.None;
                 t.DiedAt = GoblinState.Now;
                 Save();
-                GoblinPackPlugin.Log.LogInfo($"{t.Key} is gone; respawning in {t.RespawnMinutes()} minutes.");
+                GoblinPackPlugin.Log.LogInfo($"{t.Key} is gone ({where}); respawning in {t.RespawnMinutes()} minutes.");
             }
 
             if (!t.Enabled())
@@ -157,9 +173,67 @@ namespace GoblinPack
 
         public static string Describe()
         {
+            if (ZNet.instance != null && ZNet.instance.IsServer())
+            {
+                // Host/server: answer from the director's own state rather than the 10 s broadcast.
+                return $"Joe: {Status(Joe)}, Sean: {Status(Sean)}, " +
+                       $"rage: {(GoblinState.IsRaging ? (GoblinState.RageUntil - GoblinState.Now).ToString("F0") + "s" : "no")}";
+            }
             return $"Joe: {(GoblinState.JoeKnown ? GoblinState.JoePos.ToString("F0") : "unknown/dead")}, " +
                    $"Sean: {(GoblinState.SeanKnown ? GoblinState.SeanPos.ToString("F0") : "unknown/dead")}, " +
                    $"rage: {(GoblinState.IsRaging ? (GoblinState.RageUntil - GoblinState.Now).ToString("F0") + "s" : "no")}";
+        }
+
+        /// <summary>
+        /// Scans every object in the world for this NPC's prefab. Keeps one (the closest to where we last
+        /// saw it) and removes any duplicates, so there's still only one Joe and one Sean.
+        /// </summary>
+        private static ZDO FindByPrefab(Tracked t)
+        {
+            int hash = t.Prefab.GetStableHashCode();
+            var matches = new List<ZDO>();
+            foreach (ZDO candidate in ZDOMan.instance.m_objectsByID.Values)
+            {
+                if (candidate != null && candidate.GetPrefab() == hash)
+                {
+                    matches.Add(candidate);
+                }
+            }
+            if (matches.Count == 0)
+            {
+                return null;
+            }
+
+            matches.Sort((x, y) => Vector3.Distance(x.GetPosition(), t.LastPos).CompareTo(Vector3.Distance(y.GetPosition(), t.LastPos)));
+            for (int i = 1; i < matches.Count; i++)
+            {
+                GoblinPackPlugin.Log.LogInfo($"Removing duplicate {t.Key} at {matches[i].GetPosition().ToString("F0")}.");
+                matches[i].SetOwner(ZDOMan.GetSessionID());
+                ZDOMan.instance.DestroyZDO(matches[i]);
+            }
+            return matches[0];
+        }
+
+        private static string Status(Tracked t)
+        {
+            if (t.Alive)
+            {
+                return t.LastPos.ToString("F0");
+            }
+            if (!t.Enabled())
+            {
+                return "disabled in config";
+            }
+            if (Time.time < _graceUntil)
+            {
+                return "world still loading, checking shortly";
+            }
+            if (t.DiedAt > 0d)
+            {
+                double left = t.RespawnMinutes() * 60d - (GoblinState.Now - t.DiedAt);
+                return left > 0d ? $"dead, respawns in {left:F0}s" : "respawning near a player";
+            }
+            return "not spawned yet";
         }
 
         private static List<Vector3> PlayerPositions()

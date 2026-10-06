@@ -42,6 +42,14 @@ namespace GoblinPack
             "Tax collector! Hehehe!",
         };
 
+        public static readonly string[] JoePuke =
+        {
+            "Bleeeuuurgh!",
+            "Hrrk... shouldn't have eaten the blue ones...",
+            "Sean's soup. It was Sean's soup. BLARGH!",
+            "Don't look at me! HURRK!",
+        };
+
         public static readonly string[] JoeProvoked =
         {
             "You HIT me?! Oh, now you've done it, {player}!",

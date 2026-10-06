@@ -66,6 +66,7 @@ namespace GoblinPack
             // Joe isn't a player enemy until provoked, so without this nobody could hit him at all.
             ai.m_aggravatable = true;
 
+            EnsurePersistent(prefab);
             prefab.AddComponent<JoeBrain>();
             CreatureManager.Instance.AddCreature(creature);
         }
@@ -111,8 +112,25 @@ namespace GoblinPack
             // Speech is driven by SeanBrain; keep the vanilla idle chatter effectively off.
             R.Set(trader, "m_randomTalkInterval", 100000f);
 
+            EnsurePersistent(prefab);
             prefab.AddComponent<SeanBrain>();
             CreatureManager.Instance.AddCreature(creature);
+        }
+
+        /// <summary>Only persistent ZNetViews are written to the world save.</summary>
+        private static void EnsurePersistent(GameObject prefab)
+        {
+            ZNetView view = prefab.GetComponent<ZNetView>();
+            if (view == null)
+            {
+                GoblinPackPlugin.Log.LogError($"{prefab.name} has no ZNetView; it can't be saved.");
+                return;
+            }
+            if (!view.m_persistent)
+            {
+                GoblinPackPlugin.Log.LogInfo($"{prefab.name}: base prefab wasn't persistent; forcing it so it's saved with the world.");
+                view.m_persistent = true;
+            }
         }
 
         // ------------------------------------------------------------------ items Sean sells

@@ -29,6 +29,7 @@ namespace GoblinPack
 
             GoblinState.Reset();
             SpellFx.Reset();
+            Puke.Reset();
             rpc.Register<ZPackage>(State, OnState);
             rpc.Register<ZPackage>(Rage, OnRage);
             rpc.Register<ZPackage>(Steal, OnSteal);

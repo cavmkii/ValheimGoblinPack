@@ -8,6 +8,7 @@ A small Fuling (0.8x scale) who roams the whole map looking for Sean.
 
 - **Wanders the map.** He travels between far-off points and goes to Sean's last known position about half the time (`Joe.SeanSeekChance`). He avoids the Ashlands, the Deep North and open ocean.
 - **Insults you.** Every 18–40 s, if a player is within 40 m, he shouts an insult at the nearest player by name or yells about Sean.
+- **Throws up.** Every 1–2.5 minutes, if a player is within 40 m, he stops and vomits, using the same effect as eating Pukeberries (`Joe.PukeEnabled`, `Joe.PukeIntervalMin/Max`).
 - **Steals.** He walks up to a nearby player, pickpockets a random non-equipped item (up to 10 from a stack), gloats and runs off. Each theft is stored on Joe, and killing him drops everything he stole at its original quality.
 - **Passive until hit.** Joe doesn't target a player until that player damages him. He then stays hostile to that player for 90 s (`Joe.ProvokeSeconds`). Other players stay safe unless they hit him too.
 - **"babywars".** If anyone types `babywars` or `baby wars` in chat (any case or punctuation, including `/s` shouts), Joe turns hostile to all players for 120 s. If the speaker is within 400 m, he charges at them. The phrases are configurable (`Joe.RagePhrases`).

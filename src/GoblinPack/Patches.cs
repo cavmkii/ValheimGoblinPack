@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using HarmonyLib;
@@ -41,11 +42,24 @@ namespace GoblinPack
     {
         private static void Prefix(Character __instance, HitData hit)
         {
-            if (hit != null && JoeBrain.TryGet(__instance, out JoeBrain joe) && hit.GetAttacker() is Player attacker)
+            if (hit == null)
             {
-                joe.OnStruckBy(attacker);
+                return;
+            }
+            bool isJoe = JoeBrain.TryGet(__instance, out JoeBrain joe);
+            if (isJoe || SeanBrain.TryGet(__instance, out _))
+            {
+                Character attacker = hit.GetAttacker();
+                LastHits[__instance] = $"{(attacker != null ? attacker.m_name : "environment/unknown")} for {hit.GetTotalDamage():F0}";
+            }
+            if (isJoe && hit.GetAttacker() is Player player)
+            {
+                joe.OnStruckBy(player);
             }
         }
+
+        /// <summary>Last hit taken by Joe or Sean, logged when they die.</summary>
+        internal static readonly Dictionary<Character, string> LastHits = new Dictionary<Character, string>();
     }
 
     /// <summary>
@@ -103,7 +117,17 @@ namespace GoblinPack
     {
         private static void Prefix(Character __instance)
         {
-            if (JoeBrain.TryGet(__instance, out JoeBrain joe))
+            bool isJoe = JoeBrain.TryGet(__instance, out JoeBrain joe);
+            if (!isJoe && !SeanBrain.TryGet(__instance, out _))
+            {
+                return;
+            }
+
+            JoeProvokePatch.LastHits.TryGetValue(__instance, out string lastHit);
+            JoeProvokePatch.LastHits.Remove(__instance);
+            GoblinPackPlugin.Log.LogInfo($"{__instance.m_name} died at {__instance.transform.position.ToString("F0")}; last hit by {lastHit ?? "nothing recorded"}.");
+
+            if (isJoe)
             {
                 joe.SayDeathLine();
                 joe.DropStash();
