@@ -15,16 +15,15 @@ namespace GoblinPack
         private static void Postfix() => Rpc.Register();
     }
 
-    /// <summary>Joe is only an enemy to players who provoked him, or to everyone during a rage.</summary>
+    /// <summary>
+    /// Joe is only an enemy to players who provoked him, or to everyone during a rage. This decides
+    /// Joe-vs-player outright (in both directions), overriding vanilla faction and aggravation rules.
+    /// </summary>
     [HarmonyPatch(typeof(BaseAI), nameof(BaseAI.IsEnemy), typeof(Character), typeof(Character))]
     internal static class JoeNeutralPatch
     {
         private static void Postfix(Character a, Character b, ref bool __result)
         {
-            if (!__result)
-            {
-                return;
-            }
             if (JoeBrain.TryGet(a, out JoeBrain joe) && b is Player playerB)
             {
                 __result = joe.IsHostileTo(playerB);
