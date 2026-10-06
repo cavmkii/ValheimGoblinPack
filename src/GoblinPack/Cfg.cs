@@ -36,6 +36,7 @@ namespace GoblinPack
         public static ConfigEntry<float> TauntIntervalMin;
         public static ConfigEntry<float> TauntIntervalMax;
         public static ConfigEntry<float> SeanSeekChance;
+        public static ConfigEntry<float> JoeScale;
 
         // Scaling
         public static ConfigEntry<ScalingMode> Scaling;
@@ -74,6 +75,7 @@ namespace GoblinPack
             StealMaxStack = B(config, "Joe", "StealMaxStack", 10, "Most items Joe takes from a single stack per theft.");
             TauntIntervalMin = B(config, "Joe", "TauntIntervalMin", 18f, "Minimum seconds between Joe's insults.");
             TauntIntervalMax = B(config, "Joe", "TauntIntervalMax", 40f, "Maximum seconds between Joe's insults.");
+            JoeScale = B(config, "Joe", "Scale", 0.8f, "Joe's size relative to a normal Fuling (0.3-3). Applied at game start.");
             SeanSeekChance = B(config, "Joe", "SeanSeekChance", 0.5f, "Chance (0-1) that Joe's next wander target is Sean's last known position.");
 
             Scaling = B(config, "Scaling", "Mode", ScalingMode.Highest, "What 'player level' means for Joe's scaling. Skills = highest average of top-5 skills among nearby players. Bosses = bosses defeated in the world. Highest = whichever is greater.");

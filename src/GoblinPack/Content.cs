@@ -52,7 +52,7 @@ namespace GoblinPack
             var creature = new CustomCreature(JoePrefab, "Goblin", config);
             GameObject prefab = creature.Prefab;
 
-            prefab.transform.localScale *= 0.8f;
+            prefab.transform.localScale *= Mathf.Clamp(Cfg.JoeScale.Value, 0.3f, 3f);
             Character character = prefab.GetComponent<Character>();
             character.m_name = "Joe";
             character.m_boss = false;
@@ -62,6 +62,9 @@ namespace GoblinPack
             ai.m_randomMoveInterval = 2f;
             // Fulings normally smash player buildings on sight; Joe is a nuisance, not a raid.
             ai.m_attackPlayerObjects = false;
+            // Player attacks only land on enemies or "aggravatable" creatures (how passive Dvergr can be hit).
+            // Joe isn't a player enemy until provoked, so without this nobody could hit him at all.
+            ai.m_aggravatable = true;
 
             prefab.AddComponent<JoeBrain>();
             CreatureManager.Instance.AddCreature(creature);

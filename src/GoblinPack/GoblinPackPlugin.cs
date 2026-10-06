@@ -15,7 +15,7 @@ namespace GoblinPack
     {
         public const string PluginGuid = "cavmkii.goblinpack";
         public const string PluginName = "GoblinPack";
-        public const string PluginVersion = "0.1.1";
+        public const string PluginVersion = "0.1.2";
 
         internal static GoblinPackPlugin Instance;
         internal static ManualLogSource Log;
