@@ -37,6 +37,9 @@ namespace GoblinPack
         public static ConfigEntry<float> TauntIntervalMax;
         public static ConfigEntry<float> SeanSeekChance;
         public static ConfigEntry<float> JoeScale;
+        public static ConfigEntry<bool> PukeEnabled;
+        public static ConfigEntry<float> PukeIntervalMin;
+        public static ConfigEntry<float> PukeIntervalMax;
 
         // Scaling
         public static ConfigEntry<ScalingMode> Scaling;
@@ -76,6 +79,9 @@ namespace GoblinPack
             TauntIntervalMin = B(config, "Joe", "TauntIntervalMin", 18f, "Minimum seconds between Joe's insults.");
             TauntIntervalMax = B(config, "Joe", "TauntIntervalMax", 40f, "Maximum seconds between Joe's insults.");
             JoeScale = B(config, "Joe", "Scale", 0.8f, "Joe's size relative to a normal Fuling (0.3-3). Applied at game start.");
+            PukeEnabled = B(config, "Joe", "PukeEnabled", true, "Joe occasionally throws up (the Pukeberries effect) when players are nearby.");
+            PukeIntervalMin = B(config, "Joe", "PukeIntervalMin", 60f, "Minimum seconds between Joe's vomiting fits.");
+            PukeIntervalMax = B(config, "Joe", "PukeIntervalMax", 150f, "Maximum seconds between Joe's vomiting fits.");
             SeanSeekChance = B(config, "Joe", "SeanSeekChance", 0.5f, "Chance (0-1) that Joe's next wander target is Sean's last known position.");
 
             Scaling = B(config, "Scaling", "Mode", ScalingMode.Highest, "What 'player level' means for Joe's scaling. Skills = highest average of top-5 skills among nearby players. Bosses = bosses defeated in the world. Highest = whichever is greater.");

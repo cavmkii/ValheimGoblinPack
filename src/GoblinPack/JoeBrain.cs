@@ -28,6 +28,8 @@ namespace GoblinPack
         private float _nextTaunt;
         private float _nextScale;
         private float _fleeUntil;
+        private float _nextPuke;
+        private float _pukeUntil;
         private string _provokerCacheSource;
         private Dictionary<long, double> _provokerCache = new Dictionary<long, double>();
 
@@ -56,11 +58,13 @@ namespace GoblinPack
             _wander = new Wander(_ai, _nview, Forbidden);
             _fight = new Fight(this);
             Speech.Register(_nview, 1.4f);
+            Puke.Register(_nview, _character);
             _fight.RegisterRpcs();
 
             Instances.Add(this);
             ByCharacter[_character] = this;
             _nextTaunt = Time.time + Random.Range(5f, 12f);
+            _nextPuke = Time.time + Random.Range(20f, 40f);
         }
 
         private void OnDestroy()
@@ -98,10 +102,41 @@ namespace GoblinPack
             }
             else if (!HasActiveProvokers())
             {
+                if (UpdatePuke())
+                {
+                    return;
+                }
                 UpdateCalm();
             }
 
             UpdateTaunts();
+        }
+
+        /// <summary>Every so often, when someone's around to see it, Joe stops and throws up. Returns true while he's busy.</summary>
+        private bool UpdatePuke()
+        {
+            if (Time.time < _pukeUntil)
+            {
+                _wander.SetAnchor(transform.position, 0.5f);
+                return true;
+            }
+            if (!Cfg.PukeEnabled.Value || Time.time < _nextPuke)
+            {
+                return false;
+            }
+
+            float min = Mathf.Max(5f, Cfg.PukeIntervalMin.Value);
+            _nextPuke = Time.time + Random.Range(min, Mathf.Max(min, Cfg.PukeIntervalMax.Value));
+            if (Player.GetClosestPlayer(transform.position, 40f) == null)
+            {
+                return false; // Nobody to gross out.
+            }
+
+            _pukeUntil = Time.time + Puke.Seconds;
+            _wander.SetAnchor(transform.position, 0.5f);
+            Puke.Trigger(_nview);
+            Speech.Say(_nview, Lines.Pick(Lines.JoePuke));
+            return true;
         }
 
         // ---------------------------------------------------------------- hostility
