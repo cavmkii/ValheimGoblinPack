@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>GoblinPack</AssemblyName>
+    <RootNamespace>GoblinPack</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- Lets JotunnLib generate publicized game assemblies from your Valheim install on first build. -->
+    <ExecutePrebuild>true</ExecutePrebuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Brings in references to Valheim, Unity, BepInEx and Harmony from VALHEIM_INSTALL (see Environment.props). -->
+    <PackageReference Include="JotunnLib" Version="2.30.2" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Optional: copy the built DLL straight into the r2modman / BepInEx plugins folder. -->
+  <Target Name="CopyToPlugins" AfterTargets="Build" Condition="'$(BEPINEX_PATH)' != '' AND Exists('$(BEPINEX_PATH)/plugins')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BEPINEX_PATH)/plugins/GoblinPack" />
+  </Target>
+
+</Project>

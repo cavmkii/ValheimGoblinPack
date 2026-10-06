@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy to Environment.props (git-ignored) and point it at your install. -->
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Folder that contains valheim.exe -->
+    <VALHEIM_INSTALL>C:\Program Files (x86)\Steam\steamapps\common\Valheim</VALHEIM_INSTALL>
+    <!-- BepInEx folder of the profile you play with, e.g. an r2modman profile. Defaults to $(VALHEIM_INSTALL)\BepInEx -->
+    <!-- <BEPINEX_PATH>C:\Users\you\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\Default\BepInEx</BEPINEX_PATH> -->
+  </PropertyGroup>
+</Project>
