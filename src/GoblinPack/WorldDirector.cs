@@ -66,9 +66,10 @@ namespace GoblinPack
             if (Time.time >= _nextTick && Time.time >= _graceUntil)
             {
                 _nextTick = Time.time + 5f;
+                Dictionary<int, List<ZDO>> found = ScanWorld();
                 foreach (Tracked t in All)
                 {
-                    Check(t);
+                    Check(t, found.TryGetValue(t.Prefab.GetStableHashCode(), out List<ZDO> copies) ? copies : null);
                 }
             }
 
@@ -79,19 +80,14 @@ namespace GoblinPack
             }
         }
 
-        private static void Check(Tracked t)
+        private static void Check(Tracked t, List<ZDO> copies)
         {
-            ZDO zdo = t.Id.IsNone() ? null : ZDOMan.instance.GetZDO(t.Id);
-            if (zdo == null)
+            ZDO zdo = KeepOne(t, copies);
+            if (zdo != null && zdo.m_uid != t.Id)
             {
-                // The remembered id can go stale (e.g. ids reassigned when a world loads), so before
-                // declaring it gone, look for any saved object of the right prefab.
-                zdo = FindByPrefab(t);
-                if (zdo != null)
-                {
-                    t.Id = zdo.m_uid;
-                    Save();
-                }
+                // The remembered id went stale (or there wasn't one): adopt the copy that exists.
+                t.Id = zdo.m_uid;
+                Save();
             }
             if (zdo != null)
             {
@@ -184,34 +180,66 @@ namespace GoblinPack
                    $"rage: {(GoblinState.IsRaging ? (GoblinState.RageUntil - GoblinState.Now).ToString("F0") + "s" : "no")}";
         }
 
-        /// <summary>
-        /// Scans every object in the world for this NPC's prefab. Keeps one (the closest to where we last
-        /// saw it) and removes any duplicates, so there's still only one Joe and one Sean.
-        /// </summary>
-        private static ZDO FindByPrefab(Tracked t)
+        /// <summary>One pass over every object in the world, grouped by prefab, for the NPCs we manage.</summary>
+        private static Dictionary<int, List<ZDO>> ScanWorld()
         {
-            int hash = t.Prefab.GetStableHashCode();
-            var matches = new List<ZDO>();
-            foreach (ZDO candidate in ZDOMan.instance.m_objectsByID.Values)
+            var wanted = new HashSet<int>();
+            foreach (Tracked t in All)
             {
-                if (candidate != null && candidate.GetPrefab() == hash)
-                {
-                    matches.Add(candidate);
-                }
+                wanted.Add(t.Prefab.GetStableHashCode());
             }
-            if (matches.Count == 0)
+
+            var found = new Dictionary<int, List<ZDO>>();
+            foreach (ZDO zdo in ZDOMan.instance.m_objectsByID.Values)
+            {
+                if (zdo == null)
+                {
+                    continue;
+                }
+                int prefab = zdo.GetPrefab();
+                if (!wanted.Contains(prefab))
+                {
+                    continue;
+                }
+                if (!found.TryGetValue(prefab, out List<ZDO> list))
+                {
+                    found[prefab] = list = new List<ZDO>();
+                }
+                list.Add(zdo);
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// There must only ever be one Joe and one Sean. Keeps the tracked copy (or, failing that, the one
+        /// nearest where we last saw it) and deletes every other copy, however it got there: a
+        /// <c>spawn</c> command, a summon, or a save-file oddity.
+        /// </summary>
+        private static ZDO KeepOne(Tracked t, List<ZDO> copies)
+        {
+            if (copies == null || copies.Count == 0)
             {
                 return null;
             }
 
-            matches.Sort((x, y) => Vector3.Distance(x.GetPosition(), t.LastPos).CompareTo(Vector3.Distance(y.GetPosition(), t.LastPos)));
-            for (int i = 1; i < matches.Count; i++)
+            ZDO keep = copies.Find(z => z.m_uid == t.Id);
+            if (keep == null)
             {
-                GoblinPackPlugin.Log.LogInfo($"Removing duplicate {t.Key} at {matches[i].GetPosition().ToString("F0")}.");
-                matches[i].SetOwner(ZDOMan.GetSessionID());
-                ZDOMan.instance.DestroyZDO(matches[i]);
+                copies.Sort((x, y) => Vector3.Distance(x.GetPosition(), t.LastPos).CompareTo(Vector3.Distance(y.GetPosition(), t.LastPos)));
+                keep = copies[0];
             }
-            return matches[0];
+
+            foreach (ZDO extra in copies)
+            {
+                if (extra == keep)
+                {
+                    continue;
+                }
+                GoblinPackPlugin.Log.LogInfo($"Removing extra {t.Key} at {extra.GetPosition().ToString("F0")}; there can only be one.");
+                extra.SetOwner(ZDOMan.GetSessionID());
+                ZDOMan.instance.DestroyZDO(extra);
+            }
+            return keep;
         }
 
         private static string Status(Tracked t)

@@ -7,7 +7,7 @@ A BepInEx/Jötunn mod that adds two unique, persistent NPCs to a Valheim world.
 A small Fuling (0.8x scale) who roams the whole map looking for Sean.
 
 - **Wanders the map.** He travels between far-off points and goes to Sean's last known position about half the time (`Joe.SeanSeekChance`). He avoids the Ashlands, the Deep North and open ocean.
-- **Insults you.** Every 18–40 s, if a player is within 40 m, he shouts an insult at the nearest player by name or yells about Sean.
+- **Only talks about Sean or the Baby Wars.** Every 18–40 s, if a player is within 40 m, he shouts a line, often using the nearest player's name. All his dialogue is in `BepInEx/config/GoblinPack/joe_lines.txt` (created on first run). Edit it, then run `goblinpack_reloadlines` in the console.
 - **Throws up.** Every 1–2.5 minutes, if a player is within 40 m, he stops and vomits, using the same effect as eating Pukeberries (`Joe.PukeEnabled`, `Joe.PukeIntervalMin/Max`).
 - **Steals.** He walks up to a nearby player, pickpockets a random non-equipped item (up to 10 from a stack), gloats and runs off. Each theft is stored on Joe, and killing him drops everything he stole at its original quality.
 - **Passive until hit.** Joe doesn't target a player until that player damages him. He then stays hostile to that player for 90 s (`Joe.ProvokeSeconds`). Other players stay safe unless they hit him too.
@@ -17,7 +17,7 @@ A small Fuling (0.8x scale) who roams the whole map looking for Sean.
   - **Bosses:** the number of the 7 bosses defeated in the world.
 
   The default uses whichever is higher. Both map to 0–1, which sets his health (0.6x–10x a Fuling) and his damage (0.25x–2.5x, low at the start because Fuling weapons are Plains-tier). His hover name shows `Joe (Lv N)`.
-- **Respawns.** The server keeps exactly one Joe. Ten minutes after he dies, he reappears 60–140 m from a random online player.
+- **Unique, and respawns.** The server enforces exactly one Joe (and one Sean): every few seconds it removes any extra copy, including ones made with `spawn`. When Joe dies he disappears, and ten minutes later he reappears 60–140 m from a random online player.
 
 ## Sean
 
@@ -86,6 +86,7 @@ This writes `dist\GoblinPack-0.1.0.zip`; the build output prints the full path. 
 
 - `goblinpack_where`: Joe's and Sean's last known positions, and whether Joe is enraged.
 - `goblinpack_summon joe|sean`: cheat command (devcommands; the server also checks that you're an admin). Replaces Joe or Sean with a fresh one in front of you. Handy for testing a fight: summon both.
+- `goblinpack_reloadlines`: reload Joe's dialogue from `joe_lines.txt`.
 
 ## How it works (code map)
 

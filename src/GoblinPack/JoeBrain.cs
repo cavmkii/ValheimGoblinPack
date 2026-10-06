@@ -23,6 +23,7 @@ namespace GoblinPack
         private ZNetView _nview;
         private Wander _wander;
         private Fight _fight;
+        private DeathWatch _deathWatch;
 
         private float _nextThink;
         private float _nextTaunt;
@@ -57,6 +58,7 @@ namespace GoblinPack
 
             _wander = new Wander(_ai, _nview, Forbidden);
             _fight = new Fight(this);
+            _deathWatch = new DeathWatch(_character, _nview);
             Speech.Register(_nview, 1.4f);
             Puke.Register(_nview, _character);
             _fight.RegisterRpcs();
@@ -78,7 +80,7 @@ namespace GoblinPack
 
         private void Update()
         {
-            if (!_nview.IsValid() || !_nview.IsOwner() || _character.IsDead())
+            if (!_nview.IsValid() || !_nview.IsOwner())
             {
                 return;
             }
@@ -87,6 +89,11 @@ namespace GoblinPack
                 return;
             }
             _nextThink = Time.time + 0.5f;
+
+            if (_deathWatch.Tick())
+            {
+                return;
+            }
 
             UpdateScaling();
 
@@ -337,8 +344,7 @@ namespace GoblinPack
                 return; // Nobody to hear it.
             }
 
-            string[] pool = Random.value < 0.3f ? Lines.JoeSearching : Lines.JoeInsults;
-            Speech.Say(_nview, Lines.Pick(pool, nearest.GetPlayerName()));
+            Speech.Say(_nview, Lines.Pick(Lines.JoeAmbient, nearest.GetPlayerName()));
         }
 
         // ---------------------------------------------------------------- scaling

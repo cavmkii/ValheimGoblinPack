@@ -19,6 +19,7 @@ namespace GoblinPack
         private BaseAI _ai;
         private ZNetView _nview;
         private Wander _wander;
+        private DeathWatch _deathWatch;
 
         private float _nextThink;
         private float _campUntil;
@@ -66,6 +67,7 @@ namespace GoblinPack
             }
 
             _wander = new Wander(_ai, _nview, Forbidden);
+            _deathWatch = new DeathWatch(_character, _nview);
             Speech.Register(_nview, 2.1f);
             Instances.Add(this);
             ByCharacter[_character] = this;
@@ -82,7 +84,7 @@ namespace GoblinPack
 
         private void Update()
         {
-            if (!_nview.IsValid() || !_nview.IsOwner() || _character.IsDead())
+            if (!_nview.IsValid() || !_nview.IsOwner())
             {
                 return;
             }
@@ -91,6 +93,11 @@ namespace GoblinPack
                 return;
             }
             _nextThink = Time.time + 0.5f;
+
+            if (_deathWatch.Tick())
+            {
+                return;
+            }
 
             Vector3 pos = transform.position;
 

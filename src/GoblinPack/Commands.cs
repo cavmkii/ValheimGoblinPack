@@ -10,6 +10,7 @@ namespace GoblinPack
         {
             CommandManager.Instance.AddConsoleCommand(new WhereCommand());
             CommandManager.Instance.AddConsoleCommand(new SummonCommand());
+            CommandManager.Instance.AddConsoleCommand(new ReloadLinesCommand());
         }
 
         private class WhereCommand : ConsoleCommand
@@ -20,6 +21,17 @@ namespace GoblinPack
             public override void Run(string[] args)
             {
                 Console.instance.Print(WorldDirector.Describe());
+            }
+        }
+
+        private class ReloadLinesCommand : ConsoleCommand
+        {
+            public override string Name => "goblinpack_reloadlines";
+            public override string Help => "Reload Joe's dialogue from BepInEx/config/GoblinPack/joe_lines.txt.";
+
+            public override void Run(string[] args)
+            {
+                Console.instance.Print(JoeLines.Load());
             }
         }
 
