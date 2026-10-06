@@ -36,6 +36,9 @@ A travelling Dvergr merchant (cloned from the ice mage) who sells weather-themed
 | Sunshard Talisman | utility | fire resistant, +15% health regen | 240 |
 | Bottled Sunshine ×3 | consumable | clear skies for 5 min (only for the drinker) | 90 |
 | Bottled Thunderstorm ×3 | consumable | thunderstorm for 3 min (only for the drinker) | 60 |
+| Soda ×5 | food | +35 health, +150 stamina (20 min) | 25 |
+| Merch | chest | black, no armor, no stats | 60 |
+| Glock | crossbow | semi-automatic Arbalest: no reload, uses bolts | 750 |
 | Thunderclap Axe | iron axe | +25 lightning | 450 |
 | Hailstone Mace | iron mace | +22 frost | 500 |
 | Gale Spear | bronze spear | +15 lightning, 2x knockback | 320 |

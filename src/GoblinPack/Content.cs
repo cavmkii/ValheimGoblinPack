@@ -153,6 +153,11 @@ namespace GoblinPack
                 "For when you want the mood without the commitment. Three minutes of storm, just for you.",
                 60, "ThunderStorm", 180f);
 
+            // Sean's merch line.
+            AddSoda();
+            AddMerch();
+            AddGlock();
+
             // Weather-forged weapons.
             AddWeapon("GP_ThunderclapAxe", "AxeIron", "Thunderclap Axe",
                 "An iron axe that hums before rain. Adds lightning damage.", 450,
@@ -166,6 +171,90 @@ namespace GoblinPack
             AddWeapon("GP_SquallBow", "BowFineWood", "Squall Bow",
                 "Strung with rain-soaked sinew. Adds frost damage to every shot.", 550,
                 d => { d.m_frost += 12f; return d; });
+        }
+
+        // ------------------------------------------------------------------ Sean's merch line
+
+        /// <summary>"Soda": a drink-bottle model turned into food: +35 health, +150 stamina.</summary>
+        private static void AddSoda()
+        {
+            var item = new CustomItem("GP_Soda", "MeadStaminaMinor");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Soda";
+            shared.m_description = "Sean's own brand. Tastes like a thunderstorm. +35 health, +150 stamina.";
+            // Meads work through a status effect; food works through these fields. Make it food.
+            shared.m_consumeStatusEffect = null;
+            shared.m_food = 35f;
+            shared.m_foodStamina = 150f;
+            shared.m_foodEitr = 0f;
+            shared.m_foodRegen = 2f;
+            shared.m_foodBurnTime = 1200f;
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 25, stack: 5);
+        }
+
+        /// <summary>"Merch": a black chest piece with no stats at all.</summary>
+        private static void AddMerch()
+        {
+            var item = new CustomItem("GP_Merch", "ArmorLeatherChest");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Merch";
+            shared.m_description = "Official Sean merch. It's black. It does nothing. It's drip.";
+            shared.m_armor = 0f;
+            shared.m_armorPerLevel = 0f;
+            shared.m_movementModifier = 0f;
+            shared.m_useDurability = false;
+            shared.m_weight = 1f;
+            shared.m_equipStatusEffect = null;
+
+            // Worn look comes from the armor material; the dropped look from the prefab's renderers.
+            shared.m_armorMaterial = Blacken(shared.m_armorMaterial);
+            foreach (Renderer renderer in item.ItemPrefab.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] materials = renderer.sharedMaterials;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    materials[i] = Blacken(materials[i]);
+                }
+                renderer.sharedMaterials = materials;
+            }
+
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 60);
+        }
+
+        private static Material Blacken(Material original)
+        {
+            if (original == null)
+            {
+                return null;
+            }
+            var black = new Material(original) { name = original.name + "_GPBlack" };
+            if (black.HasProperty("_Color"))
+            {
+                black.color = new Color(0.07f, 0.07f, 0.07f, 1f);
+            }
+            else
+            {
+                GoblinPackPlugin.Log.LogWarning($"Merch: material {original.name} has no _Color; it may not look black.");
+            }
+            return black;
+        }
+
+        /// <summary>"Glock": an Arbalest with the reload removed, so it fires as fast as you click.</summary>
+        private static void AddGlock()
+        {
+            var item = new CustomItem("GP_Glock", "CrossbowArbalest");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Glock";
+            shared.m_description = "Semi-automatic. Sean says it's for 'weather emergencies'. Uses bolts.";
+            Attack attack = shared.m_attack;
+            attack.m_requiresReload = false;
+            attack.m_reloadTime = 0f;
+            attack.m_reloadStaminaDrain = 0f;
+            attack.m_attackStamina = Mathf.Min(attack.m_attackStamina, 4f);
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 750);
         }
 
         private static void AddCharm(string id, string name, string description, int price,
