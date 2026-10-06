@@ -4,3 +4,4 @@ obj/
 *.user
 Environment.props
 DoPrebuild.props
+dist/

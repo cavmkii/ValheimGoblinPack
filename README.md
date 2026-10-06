@@ -51,19 +51,31 @@ Missed spells land around the arena and leave **craters**. These are real terrai
 
 Neither of them can drop the other below 15% health, so the fight always ends in a stalemate. Joe then storms off. After a 10-minute cooldown they can fight again. Players nearby get a centre-screen warning when a fight starts.
 
+## Install (Vortex)
+
+1. In Vortex, install **BepInExPack Valheim** and **Jotunn** (both on Nexus) and deploy.
+2. Build the zip (below), then in Vortex go to **Mods → Install From File** and pick `dist\GoblinPack-<version>.zip`. Enable it and deploy.
+3. Every player and the server need GoblinPack and Jotunn. Jotunn refuses connections where the versions don't match.
+
+The zip contains `BepInEx/plugins/GoblinPack/GoblinPack.dll` (plus this README), so Vortex deploys it relative to the game folder. It doesn't include Jotunn: install that as its own mod.
+
 ## Building
 
 Requirements:
-- .NET SDK 6+ (or Visual Studio 2022)
-- Valheim with BepInExPack_Valheim
-- Jötunn installed in the game
+- .NET SDK 6 or newer (`winget install Microsoft.DotNet.SDK.8`)
+- Valheim with BepInEx already deployed into the game folder (step 1 above)
 
-Steps:
-1. Copy `Environment.props.example` to `Environment.props` and set `VALHEIM_INSTALL`. If you play through r2modman, also set `BEPINEX_PATH` to your profile.
-2. Run `dotnet build -c Release`.
+From the repo root in PowerShell:
 
-   The JotunnLib NuGet package generates publicized game assemblies from your install on the first build and references them, along with Unity, BepInEx and Harmony. If `BEPINEX_PATH/plugins` exists, the build copies `GoblinPack.dll` into `plugins/GoblinPack/`.
-3. Every player and the server need the mod. Jötunn enforces this.
+```powershell
+dotnet build src\GoblinPack\GoblinPack.csproj -c Release -p:ValheimDir="D:\Steam\steamapps\common\Valheim" -p:PackageZip=true
+```
+
+This writes `dist\GoblinPack-0.1.0.zip`; the build output prints the full path. Notes:
+- On the first build, JotunnLib generates publicized copies of the game assemblies in `valheim_Data\Managed\publicized_assemblies` and compiles against them. Re-run the build after a game update.
+- `-p:DeployToPlugins=true` copies the DLL straight into `<ValheimDir>\BepInEx\plugins\GoblinPack` for quick testing without Vortex. Don't leave that copy in place alongside the Vortex-installed one.
+- Bump `<Version>` in `GoblinPack.csproj` for each release so the zip names (and Vortex's mod list) stay distinct.
+- Instead of `-p:ValheimDir`, you can copy `Environment.props.example` to `Environment.props` and set `VALHEIM_INSTALL` there.
 
 ## Config
 
@@ -92,6 +104,7 @@ What's been checked:
 - The project compiles warning-free against Jötunn 2.30.2, HarmonyX and Unity reference assemblies.
 - It also compiles against the community `ValheimGameLibs` 0.221.4 stripped game assemblies.
 - Every reflected field and Harmony target exists in that game build, with exactly one matching overload.
+- The `-p:ValheimDir ... -p:PackageZip=true` build runs end to end against a stand-in game folder built from those assemblies, and produces the zip layout above. Not yet tried in Vortex itself.
 
 It has **not been run in-game yet.** Treat the first session as a test.
 

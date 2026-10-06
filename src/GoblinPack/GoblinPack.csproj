@@ -8,19 +8,58 @@
     <Version>0.1.0</Version>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <!-- Lets JotunnLib generate publicized game assemblies from your Valheim install on first build. -->
+    <!-- Lets JotunnLib generate publicized game assemblies from the Valheim install on first build. -->
     <ExecutePrebuild>true</ExecutePrebuild>
+    <!-- -p:PackageZip=true writes a Vortex-installable zip to <repo>/dist. -->
+    <PackageZip Condition="'$(PackageZip)' == ''">false</PackageZip>
+    <!-- -p:DeployToPlugins=true copies the DLL straight into BepInEx/plugins (manual testing without Vortex). -->
+    <DeployToPlugins Condition="'$(DeployToPlugins)' == ''">false</DeployToPlugins>
+    <DistDir>$(SolutionDir)dist\</DistDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Brings in references to Valheim, Unity, BepInEx and Harmony from VALHEIM_INSTALL (see Environment.props). -->
-    <PackageReference Include="JotunnLib" Version="2.30.2" />
+    <!--
+      References Valheim, Unity, BepInEx and Harmony from the game folder (ValheimDir / VALHEIM_INSTALL).
+      Jotunn itself is a separate mod the player installs; don't ship our own copy.
+    -->
+    <PackageReference Include="JotunnLib" Version="2.30.2" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- Optional: copy the built DLL straight into the r2modman / BepInEx plugins folder. -->
-  <Target Name="CopyToPlugins" AfterTargets="Build" Condition="'$(BEPINEX_PATH)' != '' AND Exists('$(BEPINEX_PATH)/plugins')">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BEPINEX_PATH)/plugins/GoblinPack" />
+  <!-- Game, Unity and BepInEx assemblies are already in the game folder; don't copy them to bin. -->
+  <ItemDefinitionGroup>
+    <Reference>
+      <Private>false</Private>
+    </Reference>
+  </ItemDefinitionGroup>
+
+  <Target Name="CheckValheimDir" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(VALHEIM_INSTALL)' == '' OR !Exists('$(VALHEIM_INSTALL)')"
+           Text="Valheim not found. Pass the game folder, e.g. -p:ValheimDir=&quot;D:\Steam\steamapps\common\Valheim&quot; (got '$(VALHEIM_INSTALL)')." />
+    <Error Condition="!Exists('$(BEPINEX_PATH)/core/BepInEx.dll')"
+           Text="BepInEx not found at '$(BEPINEX_PATH)'. Install BepInExPack Valheim (e.g. through Vortex) and deploy it once before building." />
+  </Target>
+
+  <!--
+    Zip layout: BepInEx/plugins/GoblinPack/GoblinPack.dll.
+    Vortex's Valheim support deploys archives with a top-level BepInEx folder relative to the game folder.
+  -->
+  <Target Name="PackageVortexZip" AfterTargets="Build" Condition="'$(PackageZip)' == 'true'">
+    <PropertyGroup>
+      <_StageDir>$(IntermediateOutputPath)package\</_StageDir>
+      <_ZipPath>$(DistDir)GoblinPack-$(Version).zip</_ZipPath>
+    </PropertyGroup>
+    <RemoveDir Directories="$(_StageDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(_StageDir)BepInEx\plugins\GoblinPack" />
+    <Copy SourceFiles="$(SolutionDir)README.md" DestinationFolder="$(_StageDir)BepInEx\plugins\GoblinPack" />
+    <MakeDir Directories="$(DistDir)" />
+    <ZipDirectory SourceDirectory="$(_StageDir)" DestinationFile="$(_ZipPath)" Overwrite="true" />
+    <Message Importance="High" Text="Vortex package: $([System.IO.Path]::GetFullPath('$(_ZipPath)'))" />
+  </Target>
+
+  <Target Name="DeployToPluginsFolder" AfterTargets="Build" Condition="'$(DeployToPlugins)' == 'true'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BEPINEX_PATH)\plugins\GoblinPack" />
+    <Message Importance="High" Text="Copied to $(BEPINEX_PATH)\plugins\GoblinPack" />
   </Target>
 
 </Project>

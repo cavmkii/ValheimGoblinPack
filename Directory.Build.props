@@ -1,6 +1,11 @@
 <Project>
-  <!-- JotunnLib reads $(SolutionDir)Environment.props; make that work for `dotnet build` on the csproj too. -->
+  <!--
+    Imported before NuGet package props, so JotunnLib's Paths.props sees these values.
+    Pass the game folder on the command line:  -p:ValheimDir="D:\Steam\steamapps\common\Valheim"
+  -->
   <PropertyGroup>
+    <VALHEIM_INSTALL Condition="'$(VALHEIM_INSTALL)' == '' AND '$(ValheimDir)' != ''">$(ValheimDir)</VALHEIM_INSTALL>
+    <!-- JotunnLib also reads $(SolutionDir)Environment.props; make that work when building the csproj directly. -->
     <SolutionDir Condition="'$(SolutionDir)' == '' OR '$(SolutionDir)' == '*Undefined*'">$(MSBuildThisFileDirectory)</SolutionDir>
   </PropertyGroup>
 </Project>
