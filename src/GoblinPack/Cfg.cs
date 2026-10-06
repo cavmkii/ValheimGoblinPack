@@ -56,9 +56,6 @@ namespace GoblinPack
         public static ConfigEntry<float> FightTriggerRange;
         public static ConfigEntry<float> FightSeconds;
         public static ConfigEntry<float> FightCooldownMinutes;
-        public static ConfigEntry<bool> FightCraters;
-        public static ConfigEntry<float> CraterScale;
-        public static ConfigEntry<int> MaxCratersPerFight;
         public static ConfigEntry<float> BystanderDamageMultiplier;
 
         public static void Bind(ConfigFile config)
@@ -96,9 +93,6 @@ namespace GoblinPack
             FightTriggerRange = B(config, "Fight", "TriggerRange", 35f, "Joe and Sean start fighting when this close.");
             FightSeconds = B(config, "Fight", "DurationSeconds", 45f, "Length of a fight.");
             FightCooldownMinutes = B(config, "Fight", "CooldownMinutes", 10f, "Minutes before they can fight again.");
-            FightCraters = B(config, "Fight", "Craters", true, "Whether spells deform terrain. Craters are permanent terrain edits, like a pickaxe.");
-            CraterScale = B(config, "Fight", "CraterScale", 1f, "Multiplier on crater depth.");
-            MaxCratersPerFight = B(config, "Fight", "MaxCratersPerFight", 14, "Cap on terrain edits per fight.");
             BystanderDamageMultiplier = B(config, "Fight", "BystanderDamageMultiplier", 0.5f, "Multiplier on spell damage to anyone other than Joe and Sean caught in the blast. 0 disables.");
         }
 

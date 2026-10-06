@@ -441,6 +441,7 @@ namespace GoblinPack
                 item.m_quality = int.Parse(parts[2], CultureInfo.InvariantCulture);
                 item.m_variant = int.Parse(parts[3], CultureInfo.InvariantCulture);
                 item.m_durability = item.GetMaxDurability();
+                item.m_dropPrefab = prefab;
 
                 Vector3 pos = transform.position + Vector3.up + Random.insideUnitSphere * 0.5f;
                 ItemDrop.DropItem(item, item.m_stack, pos, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));

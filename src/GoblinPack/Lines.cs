@@ -43,7 +43,7 @@ namespace GoblinPack
         public static readonly string[] SeanFightEnd =
         {
             "And STAY gone! Now, where was I? Ah yes, discounts!",
-            "Sorry about the craters. Those are free, by the way.",
+            "Sorry about the scorch marks. Those are free, by the way.",
         };
 
         public static readonly string[] SeanBuy = { "Pleasure doing business!", "May the skies be kind to you!" };

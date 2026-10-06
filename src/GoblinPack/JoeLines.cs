@@ -17,6 +17,14 @@ namespace GoblinPack
         {
             ["ambient"] = new[]
             {
+                "Sean owes me $50 for fact-checking fees",
+                "Where is President Seanald Trump?",
+                "Sean I am pleased to inform you that I, Hi-Fido, have completed my awesome tiny keyboard and gotten the number function to work, thus making I, Hi-Fido 2,000,000,000x cooler than you @ImperfectPK",
+                "I was walking behind Sean this morning and saw his phone. Mf listens to Mumford and Seans",
+                "Sean be like \"No One Gets Me Im Moving to Svalbaard\"",
+                "Me when I hop on the Sean type beat",
+                "Woke up thinking about Sean I'm soooooo obsessed",
+                "I know your past, present, and future and every variation of every Sean",
                 "{player}! Have you seen Sean? Smug dwarf. Smells like rain. Owes me money.",
                 "Sean thinks he can hide from me. Sean is WRONG.",
                 "Everyone knows Sean started the Baby Wars. EVERYONE.",

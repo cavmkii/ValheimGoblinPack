@@ -16,10 +16,6 @@ namespace GoblinPack
 
         private static readonly string[] SeanBases = { "DvergerMageIce", "DvergerMage", "Dverger" };
 
-        public static GameObject CraterSmall;
-        public static GameObject CraterMedium;
-        public static GameObject CraterLarge;
-
         private static readonly List<Trader.TradeItem> Stock = new List<Trader.TradeItem>();
 
         public static void Register()
@@ -33,7 +29,6 @@ namespace GoblinPack
             PrefabManager.OnVanillaPrefabsAvailable -= AddContent;
             try
             {
-                AddCraters();
                 AddItems();
                 AddJoe();
                 AddSean();
@@ -243,60 +238,6 @@ namespace GoblinPack
         private static void AddStock(CustomItem item, int price, int stack = 1)
         {
             Stock.Add(new Trader.TradeItem { m_prefab = item.ItemDrop, m_stack = stack, m_price = price });
-        }
-
-        // ------------------------------------------------------------------ craters
-
-        /// <summary>
-        /// Terrain edits replicate by prefab hash, so craters must be real registered prefabs rather
-        /// than TerrainOps built at runtime. Jotunn registers any prefab with a TerrainOp into ObjectDB.
-        /// </summary>
-        private static void AddCraters()
-        {
-            float depth = Mathf.Max(0f, Cfg.CraterScale.Value);
-            CraterSmall = MakeCrater("GP_CraterSmall", 2.5f, 1.2f * depth);
-            CraterMedium = MakeCrater("GP_CraterMedium", 4f, 2.2f * depth);
-            CraterLarge = MakeCrater("GP_CraterLarge", 6f, 3.5f * depth);
-        }
-
-        private static GameObject MakeCrater(string name, float radius, float depth)
-        {
-            GameObject prefab = PrefabManager.Instance.CreateEmptyPrefab(name, false);
-            if (prefab == null)
-            {
-                return null;
-            }
-
-            // CreateEmptyPrefab makes a cube; we only want the terrain operation.
-            Object.DestroyImmediate(prefab.GetComponent<Collider>());
-            Object.DestroyImmediate(prefab.GetComponent<MeshRenderer>());
-            Object.DestroyImmediate(prefab.GetComponent<MeshFilter>());
-
-            TerrainOp op = prefab.AddComponent<TerrainOp>();
-            object settings = R.Get(op, "m_settings");
-            if (settings == null)
-            {
-                GoblinPackPlugin.Log.LogWarning("TerrainOp.m_settings not found; craters disabled.");
-                Object.DestroyImmediate(prefab);
-                return null;
-            }
-
-            R.Set(settings, "m_level", false);
-            R.Set(settings, "m_raise", true);
-            R.Set(settings, "m_raiseRadius", radius);
-            R.Set(settings, "m_raisePower", 2f);
-            R.Set(settings, "m_raiseDelta", -depth);
-            R.Set(settings, "m_smooth", true);
-            R.Set(settings, "m_smoothRadius", radius + 1.5f);
-            R.Set(settings, "m_smoothPower", 3f);
-            R.Set(settings, "m_paintCleared", true);
-            R.Set(settings, "m_paintRadius", radius + 1f);
-            R.SetEnum(settings, "m_paintType", "Dirt");
-            // Settings may be a struct in some versions: write the (boxed) copy back.
-            R.Set(op, "m_settings", settings);
-
-            PrefabManager.Instance.AddPrefab(new CustomPrefab(prefab, false));
-            return prefab;
         }
     }
 

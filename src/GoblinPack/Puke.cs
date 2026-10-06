@@ -12,6 +12,9 @@ namespace GoblinPack
         private const string PukeRpc = "GP_Puke";
         private const float Duration = 4f;
 
+        // Private in the game, so read through reflection (direct access throws FieldAccessException).
+        private static readonly System.Reflection.FieldInfo HeadField = HarmonyLib.AccessTools.Field(typeof(Character), "m_head");
+
         private static EffectList _effects;
         private static bool _looked;
 
@@ -66,7 +69,8 @@ namespace GoblinPack
             }
 
             Transform root = character.transform;
-            Vector3 mouth = (character.m_head != null ? character.m_head.position : root.position + Vector3.up * 1.2f)
+            Transform head = HeadField?.GetValue(character) as Transform;
+            Vector3 mouth = (head != null ? head.position : root.position + Vector3.up * 1.2f)
                             + root.forward * 0.15f;
             GameObject[] spawned = effects.Create(mouth, root.rotation, root, root.localScale.x);
             if (spawned == null)

@@ -48,7 +48,7 @@ When the two get within 35 m of each other, they fight for 45 s:
 - **Joe** throws fireballs and calls down meteors.
 - **Sean** throws ice shards, lightning strikes (Eikthyr's lightning effect) and hail volleys.
 
-Missed spells land around the arena and leave **craters**. These are real terrain edits that persist like pickaxe digs, capped at 14 per fight. Anyone caught in a blast takes damage (50% by default, `Fight.BystanderDamageMultiplier`).
+Every spell is an area-of-effect blast, and plenty of them miss and land around the arena, so anyone nearby gets caught in it. Bystanders take 50% damage by default (`Fight.BystanderDamageMultiplier`). The spells don't change the terrain.
 
 Neither of them can drop the other below 15% health, so the fight always ends in a stalemate. Joe then storms off. After a 10-minute cooldown they can fight again. Players nearby get a centre-screen warning when a fight starts.
 
@@ -80,7 +80,7 @@ This writes `dist\GoblinPack-0.1.0.zip`; the build output prints the full path. 
 
 ## Config
 
-`BepInEx/config/cavmkii.goblinpack.cfg`. Every setting is admin-only, so the server's values sync to clients. `Fight.CraterScale` is read at startup.
+`BepInEx/config/cavmkii.goblinpack.cfg`. Every setting is admin-only, so the server's values sync to clients.
 
 ## Console commands
 
@@ -93,10 +93,10 @@ This writes `dist\GoblinPack-0.1.0.zip`; the build output prints the full path. 
 | File | Role |
 |---|---|
 | `GoblinPackPlugin.cs` | Entry point. Patches each Harmony class separately, so a game update that breaks one signature only disables that feature. |
-| `Content.cs` | Clones `Goblin` → Joe and `DvergerMageIce` → Sean with Jötunn, builds the items, status effects and Sean's `Trader` stock, and registers the crater `TerrainOp` prefabs. |
+| `Content.cs` | Clones `Goblin` → Joe and `DvergerMageIce` → Sean with Jötunn, builds the items, status effects and Sean's `Trader` stock. |
 | `JoeBrain.cs`, `SeanBrain.cs` | Behaviour on top of vanilla `MonsterAI`. Runs only on the client that owns the NPC, and keeps shared state (provokers, stash, fight timers) on the ZDO so nothing is lost when ownership moves. |
 | `Wander.cs` | Long-distance travel by sliding `BaseAI.m_spawnPoint` toward a destination, so vanilla pathfinding and animation do the walking. |
-| `Fight.cs`, `SpellFx.cs` | The duel. Joe's owner decides every spell and broadcasts it. Every client draws inert copies of vanilla projectile and lightning visuals. The authority applies damage and spawns craters. |
+| `Fight.cs`, `SpellFx.cs` | The duel. Joe's owner decides every spell and broadcasts it. Every client draws inert copies of vanilla projectile and lightning visuals. The authority applies the area damage. |
 | `WorldDirector.cs` | Server-only. One Joe and one Sean per world, death detection (ZDO gone), respawn timers, position broadcasts. State is in `BepInEx/config/GoblinPack/<worldUID>.txt`. |
 | `Patches.cs` | `BaseAI.IsEnemy` (Joe passive), `Character.RPC_Damage` (provocation), `Character.Damage` (scaling and duel floor), `Character.OnDeath` (stash drop), hover text, `Trader.Update` (skipped for Sean), `Chat.SendText` (rage phrases). |
 

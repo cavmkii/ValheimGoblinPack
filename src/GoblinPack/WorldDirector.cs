@@ -49,6 +49,9 @@ namespace GoblinPack
 
         private static readonly Tracked[] All = { Joe, Sean };
 
+        // Private in the game, so read through reflection (direct access throws FieldAccessException).
+        private static readonly System.Reflection.FieldInfo ObjectsById = HarmonyLib.AccessTools.Field(typeof(ZDOMan), "m_objectsByID");
+
         private static long _loadedWorld;
         private static float _nextTick;
         private static float _graceUntil;
@@ -190,7 +193,11 @@ namespace GoblinPack
             }
 
             var found = new Dictionary<int, List<ZDO>>();
-            foreach (ZDO zdo in ZDOMan.instance.m_objectsByID.Values)
+            if (!(ObjectsById?.GetValue(ZDOMan.instance) is Dictionary<ZDOID, ZDO> all))
+            {
+                return found;
+            }
+            foreach (ZDO zdo in all.Values)
             {
                 if (zdo == null)
                 {
