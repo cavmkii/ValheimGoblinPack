@@ -183,7 +183,8 @@ namespace GoblinPack
             ZPackage pkg = new ZPackage();
             pkg.Write(who);
             pkg.Write(position);
-            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), Summon, pkg);
+            // The overload without a target peer goes to the server. (GetServerPeerID is private in the game.)
+            ZRoutedRpc.instance.InvokeRoutedRPC(Summon, pkg);
         }
 
         private static void OnSummon(long sender, ZPackage pkg)
