@@ -34,6 +34,7 @@ namespace GoblinPack
                 AddItems();
                 AddJoe();
                 AddSean();
+                AddBabyWars();
             }
             catch (Exception e)
             {
@@ -189,7 +190,7 @@ namespace GoblinPack
         /// </summary>
         private static void AddRestrainingOrder()
         {
-            var item = new CustomItem(RestrainingOrder.PrefabName, "BeltStrength");
+            var item = new CustomItem(WornItems.RestrainingOrderPrefab, "BeltStrength");
             ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
             shared.m_name = "Restraining Order";
             shared.m_description = "A belt with the court order stapled to it. Joe has to stay 15 metres away from you. " +
@@ -249,6 +250,87 @@ namespace GoblinPack
             AddStock(item, 6767);
         }
 
+        // ------------------------------------------------------------------ the Baby Wars
+
+        private static void AddBabyWars()
+        {
+            AddBaby(BabyWar.Commando, "Goblin", "Diaper Commando", 0.4f);
+            AddBaby(BabyWar.Grenadier, "GoblinShaman", "Bottle Grenadier", 0.45f);
+            AddBaby(BabyWar.Berserker, "GoblinBrute", "Binky Berserker", 0.6f);
+            AddSecurity();
+
+            var bonnet = new CustomItem(WornItems.BabyBonnetPrefab, "HelmetLeather");
+            ItemDrop.ItemData.SharedData shared = bonnet.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Baby Bonnet";
+            shared.m_description = "Joe's gift to veterans of the Baby Wars. Wear it and his babies treat you as one of their own. Sean's Security does not.";
+            shared.m_armor = 1f;
+            shared.m_armorPerLevel = 0f;
+            shared.m_weight = 0.2f;
+            ItemManager.Instance.AddItem(bonnet);
+
+            WarCauldron.MakeProp(BabyWar.Cauldron, "piece_cauldron", true, new Color(1f, 0.55f, 0.15f));
+            WarCauldron.MakeProp(BabyWar.Banner, "goblin_banner", false, null);
+            WarCauldron.MakeProp(BabyWar.Totem, "goblin_totempole", false, null);
+        }
+
+        private static void AddBaby(string id, string basePrefab, string name, float scale)
+        {
+            if (PrefabManager.Instance.GetPrefab(basePrefab) == null)
+            {
+                GoblinPackPlugin.Log.LogWarning($"Baby Wars: {basePrefab} not found; no {name}s.");
+                return;
+            }
+            var creature = new CustomCreature(id, basePrefab, new CreatureConfig { Name = name, Faction = Character.Faction.PlainsMonsters });
+            GameObject prefab = creature.Prefab;
+            prefab.transform.localScale *= scale;
+            prefab.GetComponent<Character>().m_name = name;
+            if (prefab.GetComponent<MonsterAI>() is MonsterAI ai)
+            {
+                ai.m_attackPlayerObjects = false;
+                // Bonnet wearers aren't their enemies; this keeps them hittable anyway (as with Joe).
+                ai.m_aggravatable = true;
+                ai.m_randomMoveRange = 4f;
+            }
+            CoinDropsOnly(prefab, 1, 4);
+            prefab.AddComponent<BabyBrain>();
+            CreatureManager.Instance.AddCreature(creature);
+        }
+
+        private static void AddSecurity()
+        {
+            if (PrefabManager.Instance.GetPrefab("Dverger") == null)
+            {
+                GoblinPackPlugin.Log.LogWarning("Baby Wars: Dverger not found; Sean comes alone.");
+                return;
+            }
+            var creature = new CustomCreature(BabyWar.Security, "Dverger", new CreatureConfig { Name = "Sean's Security", Faction = Character.Faction.Dverger });
+            GameObject prefab = creature.Prefab;
+            prefab.GetComponent<Character>().m_name = "Sean's Security";
+            if (prefab.GetComponent<MonsterAI>() is MonsterAI ai)
+            {
+                ai.m_attackPlayerObjects = false;
+            }
+            CoinDropsOnly(prefab, 5, 15);
+            prefab.AddComponent<SecurityBrain>();
+            CreatureManager.Instance.AddCreature(creature);
+        }
+
+        /// <summary>War creatures drop a few coins instead of their base creature's loot (no farming Fuling gear).</summary>
+        private static void CoinDropsOnly(GameObject prefab, int min, int max)
+        {
+            CharacterDrop drops = prefab.GetComponent<CharacterDrop>();
+            GameObject coins = PrefabManager.Instance.GetPrefab("Coins");
+            if (drops == null)
+            {
+                return;
+            }
+            drops.m_drops.Clear();
+            if (coins != null)
+            {
+                drops.m_drops.Add(new CharacterDrop.Drop { m_prefab = coins, m_amountMin = min, m_amountMax = max, m_chance = 0.6f });
+            }
+        }
+
         // ------------------------------------------------------------------ Sean's merch line
 
         /// <summary>"Soda": a drink-bottle model turned into food: +35 health, +150 stamina.</summary>
@@ -272,7 +354,7 @@ namespace GoblinPack
         /// <summary>"Merch": a black chest piece with no stats at all.</summary>
         private static void AddMerch()
         {
-            var item = new CustomItem("GP_Merch", "ArmorLeatherChest");
+            var item = new CustomItem(WornItems.MerchPrefab, "ArmorLeatherChest");
             ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
             shared.m_name = "Merch";
             shared.m_description = "Official Sean merch. It's black. It does nothing. It's drip.";

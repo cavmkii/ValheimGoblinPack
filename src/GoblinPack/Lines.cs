@@ -17,6 +17,10 @@ namespace GoblinPack
         public static string[] JoeDeath => JoeLines.Get("death");
         public static string[] JoePuke => JoeLines.Get("puke");
         public static string[] JoeRestrained => JoeLines.Get("restrained");
+        public static string[] JoeWarStart => JoeLines.Get("war_start");
+        public static string[] JoeWarWave => JoeLines.Get("war_wave");
+        public static string[] JoeWar => JoeLines.Get("war");
+        public static string[] JoeWarEnd => JoeLines.Get("war_end");
 
         public static readonly string[] SeanGreet =
         {
@@ -49,6 +53,15 @@ namespace GoblinPack
 
         public static readonly string[] SeanBuy = { "Pleasure doing business!", "May the skies be kind to you!" };
         public static readonly string[] SeanSell = { "I'll find a use for this. Probably.", "Hmm, a bit damp, but fine." };
+        public static readonly string[] SeanWar =
+        {
+            "Security! Earn your pay!",
+            "Merch wearers, you're with me! Everyone else, good luck!",
+            "War prices are in effect. Sorry. Not sorry.",
+            "Joe, this is a BABY WAR. Have you no shame?",
+            "Keep them away from the stock!",
+        };
+
         public static readonly string[] SeanBye = { "Watch the sky!", "Come back when it's raining!" };
 
         public static string Pick(string[] lines, string playerName = null)

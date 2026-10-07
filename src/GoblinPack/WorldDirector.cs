@@ -162,13 +162,24 @@ namespace GoblinPack
             Tracked t = string.Equals(who, "sean", StringComparison.OrdinalIgnoreCase) ? Sean : Joe;
 
             ZDO existing = t.Id.IsNone() ? null : ZDOMan.instance.GetZDO(t.Id);
+            string stash = existing != null ? existing.GetString(Keys.Stash, "") : "";
             if (existing != null)
             {
                 existing.SetOwner(ZDOMan.GetSessionID());
                 ZDOMan.instance.DestroyZDO(existing);
             }
             Spawn(t, position);
+
+            // Carry Joe's stolen goods over to the new body.
+            ZDO fresh = t.Id.IsNone() ? null : ZDOMan.instance.GetZDO(t.Id);
+            if (fresh != null && stash.Length > 0)
+            {
+                fresh.Set(Keys.Stash, stash);
+            }
         }
+
+        /// <summary>Server: is Joe currently alive (as far as the director knows)?</summary>
+        internal static bool JoeAlive => Joe.Alive;
 
         public static string Describe()
         {
@@ -191,7 +202,12 @@ namespace GoblinPack
             {
                 wanted.Add(t.Prefab.GetStableHashCode());
             }
+            return ScanWorld(wanted);
+        }
 
+        /// <summary>Every object in the world whose prefab hash is in <paramref name="wanted"/>, grouped by prefab.</summary>
+        internal static Dictionary<int, List<ZDO>> ScanWorld(HashSet<int> wanted)
+        {
             var found = new Dictionary<int, List<ZDO>>();
             if (!(ObjectsById?.GetValue(ZDOMan.instance) is Dictionary<ZDOID, ZDO> all))
             {
@@ -292,7 +308,7 @@ namespace GoblinPack
         /// On a dedicated server the spawn zone is usually not loaded, so we rely on the world
         /// generator height (ignores player terrain edits). Lift a bit to avoid spawning underground.
         /// </summary>
-        private static Vector3 SnapToGround(Vector3 p)
+        internal static Vector3 SnapToGround(Vector3 p)
         {
             if (ZoneSystem.instance.IsZoneLoaded(p) && ZoneSystem.instance.GetGroundHeight(p, out float height))
             {

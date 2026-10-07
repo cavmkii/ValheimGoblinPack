@@ -11,6 +11,7 @@ namespace GoblinPack
             CommandManager.Instance.AddConsoleCommand(new WhereCommand());
             CommandManager.Instance.AddConsoleCommand(new SummonCommand());
             CommandManager.Instance.AddConsoleCommand(new ReloadLinesCommand());
+            CommandManager.Instance.AddConsoleCommand(new BabyWarsCommand());
         }
 
         private class WhereCommand : ConsoleCommand
@@ -21,6 +22,27 @@ namespace GoblinPack
             public override void Run(string[] args)
             {
                 Console.instance.Print(WorldDirector.Describe());
+            }
+        }
+
+        /// <summary>Cheat command (needs devcommands): start or stop the Baby Wars at your position.</summary>
+        private class BabyWarsCommand : ConsoleCommand
+        {
+            public override string Name => "goblinpack_babywars";
+            public override string Help => "goblinpack_babywars start|stop - start the Baby Wars here, or call them off.";
+            public override bool IsCheat => true;
+
+            public override void Run(string[] args)
+            {
+                Player player = Player.m_localPlayer;
+                string command = args.Length > 0 ? args[0].ToLowerInvariant() : "";
+                if (player == null || (command != "start" && command != "stop"))
+                {
+                    Console.instance.Print("Usage: goblinpack_babywars start|stop");
+                    return;
+                }
+                BabyWar.SendCommand(command, player.transform.position);
+                Console.instance.Print(command == "start" ? "The Baby Wars begin..." : "Calling off the Baby Wars.");
             }
         }
 

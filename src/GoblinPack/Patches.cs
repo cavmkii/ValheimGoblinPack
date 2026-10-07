@@ -26,8 +26,9 @@ namespace GoblinPack
     }
 
     /// <summary>
-    /// Joe is only an enemy to players who provoked him, or to everyone during a rage. This decides
-    /// Joe-vs-player outright (in both directions), overriding vanilla faction and aggravation rules.
+    /// Decides hostility between players and GoblinPack's characters outright (in both directions),
+    /// overriding vanilla faction and aggravation rules: Joe is passive unless provoked, enraged or at
+    /// war; babies spare Baby Bonnet wearers; Sean's Security spares Merch wearers.
     /// </summary>
     [HarmonyPatch(typeof(BaseAI), nameof(BaseAI.IsEnemy), typeof(Character), typeof(Character))]
     internal static class JoeNeutralPatch
@@ -36,13 +37,23 @@ namespace GoblinPack
         {
             try
             {
-                if (JoeBrain.TryGet(a, out JoeBrain joe) && b is Player playerB)
+                Player player = a as Player ?? b as Player;
+                Character other = ReferenceEquals(player, a) ? b : a;
+                if (player == null || other == null || other is Player)
                 {
-                    __result = joe.IsHostileTo(playerB);
+                    return;
                 }
-                else if (JoeBrain.TryGet(b, out joe) && a is Player playerA)
+                if (JoeBrain.TryGet(other, out JoeBrain joe))
                 {
-                    __result = joe.IsHostileTo(playerA);
+                    __result = joe.IsHostileTo(player);
+                }
+                else if (BabyBrain.TryGet(other, out _))
+                {
+                    __result = BabyBrain.IsHostileTo(player);
+                }
+                else if (SecurityBrain.TryGet(other, out _))
+                {
+                    __result = SecurityBrain.IsHostileTo(player);
                 }
             }
             catch (Exception e)
@@ -105,7 +116,7 @@ namespace GoblinPack
                 }
                 Character attacker = hit.GetAttacker();
 
-                if (attacker != null && !Fight.ApplyingSpell && JoeBrain.TryGet(attacker, out _))
+                if (attacker != null && !Fight.ApplyingSpell && (JoeBrain.TryGet(attacker, out _) || BabyBrain.TryGet(attacker, out _)))
                 {
                     hit.m_damage.Modify(JoeBrain.DamageMultiplier(attacker));
                 }

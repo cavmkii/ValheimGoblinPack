@@ -54,6 +54,20 @@ namespace GoblinPack
         public static ConfigEntry<float> RestrainingDistance;
         public static ConfigEntry<float> SeanNonPlayerDamageTaken;
 
+        // Baby Wars
+        public static ConfigEntry<bool> WarEnabled;
+        public static ConfigEntry<int> WarTriggerCount;
+        public static ConfigEntry<float> WarTriggerWindowMinutes;
+        public static ConfigEntry<int> WarWaves;
+        public static ConfigEntry<int> WarWaveBaseSize;
+        public static ConfigEntry<int> WarWaveGrowth;
+        public static ConfigEntry<float> WarWaveIntervalSeconds;
+        public static ConfigEntry<float> WarMaxMinutes;
+        public static ConfigEntry<float> WarCooldownMinutes;
+        public static ConfigEntry<int> WarSecurityCount;
+        public static ConfigEntry<float> BabyHealthScale;
+        public static ConfigEntry<float> BabyDamageScale;
+
         // Fight
         public static ConfigEntry<float> FightTriggerRange;
         public static ConfigEntry<float> FightSeconds;
@@ -93,6 +107,19 @@ namespace GoblinPack
             RestrainingDistance = B(config, "Joe", "RestrainingOrderDistance", 15f, "How far Joe must stay from anyone wearing the Restraining Order.");
             SeanHealth = B(config, "Sean", "Health", 3000f, "Sean's max health.");
             SeanNonPlayerDamageTaken = B(config, "Sean", "NonPlayerDamageTaken", 0.1f, "Multiplier on damage Sean takes from ordinary monsters, so wolves don't keep killing the shop.");
+
+            WarEnabled = B(config, "BabyWars", "Enabled", true, "Saying the rage phrase enough times starts the Baby Wars.");
+            WarTriggerCount = B(config, "BabyWars", "TriggerCount", 3, "How many times 'baby wars' must be said (by anyone) within the window to start the war.");
+            WarTriggerWindowMinutes = B(config, "BabyWars", "TriggerWindowMinutes", 60f, "The window for TriggerCount, in minutes.");
+            WarWaves = B(config, "BabyWars", "Waves", 4, "Number of baby waves.");
+            WarWaveBaseSize = B(config, "BabyWars", "WaveBaseSize", 6, "Babies in the first wave.");
+            WarWaveGrowth = B(config, "BabyWars", "WaveGrowth", 3, "Extra babies per later wave.");
+            WarWaveIntervalSeconds = B(config, "BabyWars", "WaveIntervalSeconds", 75f, "Next wave comes after this long, or sooner once most of the current wave is dead.");
+            WarMaxMinutes = B(config, "BabyWars", "MaxMinutes", 15f, "The war ends after this long no matter what.");
+            WarCooldownMinutes = B(config, "BabyWars", "CooldownMinutes", 30f, "Minutes before another war can start.");
+            WarSecurityCount = B(config, "BabyWars", "SecurityCount", 3, "How many of Sean's Security guards show up.");
+            BabyHealthScale = B(config, "BabyWars", "BabyHealthScale", 0.35f, "Baby health relative to Joe's scaled health.");
+            BabyDamageScale = B(config, "BabyWars", "BabyDamageScale", 0.5f, "Baby damage relative to Joe's scaled damage.");
 
             FightTriggerRange = B(config, "Fight", "TriggerRange", 35f, "Joe and Sean start fighting when this close.");
             FightSeconds = B(config, "Fight", "DurationSeconds", 45f, "Length of a fight.");

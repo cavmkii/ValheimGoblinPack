@@ -104,6 +104,12 @@ namespace GoblinPack
             }
             _fight.TryStart();
 
+            if (BabyWar.Active)
+            {
+                UpdateWar();
+                return;
+            }
+
             if (GoblinState.IsRaging)
             {
                 UpdateRage();
@@ -152,11 +158,45 @@ namespace GoblinPack
         /// <summary>Used by the BaseAI.IsEnemy patch. Joe ignores players unless provoked or enraged.</summary>
         internal bool IsHostileTo(Player player)
         {
-            if (GoblinState.IsRaging)
+            if (ProvokedUntil(player.GetPlayerID()) > GoblinState.Now)
             {
                 return true;
             }
-            return ProvokedUntil(player.GetPlayerID()) > GoblinState.Now;
+            if (BabyWar.Active)
+            {
+                // In the war, Joe fights everyone except his Bonnet-wearing veterans.
+                return !WornItems.Has(player, Worn.BabyBonnet);
+            }
+            return GoblinState.IsRaging;
+        }
+
+        /// <summary>Called on every client for war announcements; only Joe's owner speaks.</summary>
+        internal void OnWarEvent(string[] lines)
+        {
+            if (_nview != null && _nview.IsValid() && _nview.IsOwner())
+            {
+                Player nearest = Player.GetClosestPlayer(transform.position, 80f);
+                Speech.Say(_nview, Lines.Pick(lines, nearest != null ? nearest.GetPlayerName() : null), true);
+            }
+        }
+
+        /// <summary>During the Baby Wars Joe holds his camp and shouts orders; his AI fights whoever comes.</summary>
+        private void UpdateWar()
+        {
+            _wander.ClearDestination();
+            _wander.SetAnchor(BabyWar.Camp, 12f);
+            _ai.m_randomMoveInterval = 2f;
+
+            if (Time.time < _nextTaunt)
+            {
+                return;
+            }
+            _nextTaunt = Time.time + Random.Range(10f, 20f);
+            Player nearest = Player.GetClosestPlayer(transform.position, 60f);
+            if (nearest != null)
+            {
+                Speech.Say(_nview, Lines.Pick(Lines.JoeWar, nearest.GetPlayerName()), true);
+            }
         }
 
         /// <summary>Called on the owner, before damage is applied, so the AI already sees the attacker as an enemy.</summary>
@@ -275,7 +315,7 @@ namespace GoblinPack
             float bestDistance = range;
             foreach (Player player in Player.GetAllPlayers())
             {
-                if (player == null || RestrainingOrder.IsProtected(player))
+                if (player == null || WornItems.Has(player, Worn.RestrainingOrder))
                 {
                     continue;
                 }
@@ -298,7 +338,7 @@ namespace GoblinPack
             float limit = Cfg.RestrainingDistance.Value;
             foreach (Player player in Player.GetAllPlayers())
             {
-                if (player == null || !RestrainingOrder.IsProtected(player))
+                if (player == null || !WornItems.Has(player, Worn.RestrainingOrder))
                 {
                     continue;
                 }
