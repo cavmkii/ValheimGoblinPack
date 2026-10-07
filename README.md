@@ -27,22 +27,18 @@ A travelling Dvergr merchant (cloned from the ice mage) who sells weather-themed
 - Press **E** on him to open the normal trader window (vanilla `Trader` + `StoreGui`, paid in coins).
 - He's a tank (3000 HP) and takes only 10% damage from ordinary monsters, so wolves don't keep killing the shop. Players can still kill him, and he respawns after 20 minutes.
 
-**Sean's stock** (I read "bobbits" as baubles/trinkets):
+**Sean's stock:**
 
 | Item | Type | Effect | Price |
 |---|---|---|---|
-| Stormcaller's Charm | utility | lightning resistant, +15% stamina regen | 220 |
-| Hoarfrost Pendant | utility | frost resistant | 260 |
-| Sunshard Talisman | utility | fire resistant, +15% health regen | 240 |
-| Bottled Sunshine ×3 | consumable | clear skies for 5 min (only for the drinker) | 90 |
-| Bottled Thunderstorm ×3 | consumable | thunderstorm for 3 min (only for the drinker) | 60 |
 | Soda ×5 | food | +35 health, +150 stamina (20 min) | 25 |
 | Merch | chest | black, no armor, no stats | 60 |
 | Glock | crossbow | semi-automatic Arbalest: no reload, uses bolts | 750 |
-| Thunderclap Axe | iron axe | +25 lightning | 450 |
-| Hailstone Mace | iron mace | +22 frost | 500 |
-| Gale Spear | bronze spear | +15 lightning, 2x knockback | 320 |
-| Squall Bow | fine bow | +12 frost | 550 |
+| Restraining Order | trinket | Joe must stay 15 m away from you: no stealing, no taunting, he backs off. Void if you hit him; doesn't cover the Baby Wars rage. Full adrenaline triggers *Cease and Desist* (8 s physical resistance) | 300 |
+| Diddy Oil ×3 | potion | +25% movement speed, +100% parry bonus for 5 min | 120 |
+| 67 | fists | end-game: 160 slash, 67 blunt, 30 lightning (+ per upgrade level) | 6767 |
+
+The original weather gear (three charms, Bottled Sunshine/Thunderstorm and four weather weapons) still exists in the game, so nobody loses copies they already own, but Sean only sells it if `Sean.SellWeatherGear = true` (read at game start).
 
 ## When Joe meets Sean
 

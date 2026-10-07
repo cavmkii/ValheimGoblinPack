@@ -30,6 +30,7 @@ namespace GoblinPack
         private float _nextScale;
         private float _fleeUntil;
         private float _nextPuke;
+        private float _nextRestrainedLine;
         private float _pukeUntil;
         private string _provokerCacheSource;
         private Dictionary<long, double> _provokerCache = new Dictionary<long, double>();
@@ -246,9 +247,14 @@ namespace GoblinPack
                 return;
             }
 
+            if (KeepRestrainingDistance())
+            {
+                return;
+            }
+
             if (Cfg.StealEnabled.Value && GoblinState.Now >= _nview.GetZDO().GetFloat(Keys.StealCooldown, 0f))
             {
-                Player mark = Player.GetClosestPlayer(pos, 30f);
+                Player mark = ClosestUnprotectedPlayer(30f);
                 if (mark != null && !mark.IsDead())
                 {
                     StalkAndSteal(mark);
@@ -260,6 +266,66 @@ namespace GoblinPack
             {
                 PickDestination();
             }
+        }
+
+        /// <summary>Nearest player within range who isn't wearing the Restraining Order.</summary>
+        private Player ClosestUnprotectedPlayer(float range)
+        {
+            Player best = null;
+            float bestDistance = range;
+            foreach (Player player in Player.GetAllPlayers())
+            {
+                if (player == null || RestrainingOrder.IsProtected(player))
+                {
+                    continue;
+                }
+                float d = Vector3.Distance(player.transform.position, transform.position);
+                if (d <= bestDistance)
+                {
+                    best = player;
+                    bestDistance = d;
+                }
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// If Joe is closer than the legal distance to someone wearing the Restraining Order, he backs
+        /// off (complaining). Returns true while he's busy doing that.
+        /// </summary>
+        private bool KeepRestrainingDistance()
+        {
+            float limit = Cfg.RestrainingDistance.Value;
+            foreach (Player player in Player.GetAllPlayers())
+            {
+                if (player == null || !RestrainingOrder.IsProtected(player))
+                {
+                    continue;
+                }
+                Vector3 away = transform.position - player.transform.position;
+                away.y = 0f;
+                if (away.magnitude >= limit)
+                {
+                    continue;
+                }
+
+                if (away.sqrMagnitude < 0.01f)
+                {
+                    away = Random.insideUnitSphere;
+                    away.y = 0f;
+                }
+                Vector3 retreat = player.transform.position + away.normalized * (limit + 15f);
+                _wander.SetDestination(retreat);
+                _wander.SetAnchor(retreat, 3f);
+                _fleeUntil = Time.time + 6f;
+                if (Time.time >= _nextRestrainedLine)
+                {
+                    _nextRestrainedLine = Time.time + 25f;
+                    Speech.Say(_nview, Lines.Pick(Lines.JoeRestrained, player.GetPlayerName()));
+                }
+                return true;
+            }
+            return false;
         }
 
         private void StalkAndSteal(Player mark)
@@ -338,10 +404,10 @@ namespace GoblinPack
             }
             _nextTaunt = Time.time + Random.Range(Cfg.TauntIntervalMin.Value, Mathf.Max(Cfg.TauntIntervalMin.Value, Cfg.TauntIntervalMax.Value));
 
-            Player nearest = Player.GetClosestPlayer(transform.position, 40f);
+            Player nearest = ClosestUnprotectedPlayer(40f);
             if (nearest == null)
             {
-                return; // Nobody to hear it.
+                return; // Nobody to hear it (or everyone nearby has a restraining order).
             }
 
             Speech.Say(_nview, Lines.Pick(Lines.JoeAmbient, nearest.GetPlayerName()));

@@ -50,6 +50,8 @@ namespace GoblinPack
 
         // Sean
         public static ConfigEntry<float> SeanHealth;
+        public static ConfigEntry<bool> SellWeatherGear;
+        public static ConfigEntry<float> RestrainingDistance;
         public static ConfigEntry<float> SeanNonPlayerDamageTaken;
 
         // Fight
@@ -87,6 +89,8 @@ namespace GoblinPack
             DamageMultMin = B(config, "Scaling", "DamageMultiplierMin", 0.25f, "Joe's damage multiplier at level 0. Fuling weapons are Plains-tier, so this is low on purpose.");
             DamageMultMax = B(config, "Scaling", "DamageMultiplierMax", 2.5f, "Joe's damage multiplier at max level.");
 
+            SellWeatherGear = B(config, "Sean", "SellWeatherGear", false, "Also sell the original weather charms, bottled weather and weather weapons. Read at game start.");
+            RestrainingDistance = B(config, "Joe", "RestrainingOrderDistance", 15f, "How far Joe must stay from anyone wearing the Restraining Order.");
             SeanHealth = B(config, "Sean", "Health", 3000f, "Sean's max health.");
             SeanNonPlayerDamageTaken = B(config, "Sean", "NonPlayerDamageTaken", 0.1f, "Multiplier on damage Sean takes from ordinary monsters, so wolves don't keep killing the shop.");
 

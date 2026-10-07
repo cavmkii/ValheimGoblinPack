@@ -80,6 +80,13 @@ namespace GoblinPack
                 "The Baby Wars... never... ended...",
                 "Sean... did this... somehow...",
             },
+            ["restrained"] = new[]
+            {
+                "A restraining order?! Sean wrote this. I KNOW Sean wrote this.",
+                "Fine! Fifteen metres! I'm measuring, {player}!",
+                "My lawyer will hear about this, {player}. My lawyer is also me.",
+                "This order doesn't cover the Baby Wars and you KNOW it.",
+            },
             ["puke"] = new[]
             {
                 "Sean's soup. It was Sean's soup. BLARGH!",

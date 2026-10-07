@@ -16,6 +16,7 @@ namespace GoblinPack
         public static string[] JoeFightEnd => JoeLines.Get("fight_end");
         public static string[] JoeDeath => JoeLines.Get("death");
         public static string[] JoePuke => JoeLines.Get("puke");
+        public static string[] JoeRestrained => JoeLines.Get("restrained");
 
         public static readonly string[] SeanGreet =
         {
