@@ -5,7 +5,7 @@
     <AssemblyName>GoblinPack</AssemblyName>
     <RootNamespace>GoblinPack</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <Version>0.3.0</Version>
+    <Version>0.5.1</Version>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <!-- Lets JotunnLib generate publicized game assemblies from the Valheim install on first build. -->

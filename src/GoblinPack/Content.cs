@@ -17,6 +17,8 @@ namespace GoblinPack
         private static readonly string[] SeanBases = { "DvergerMageIce", "DvergerMage", "Dverger" };
 
         private static readonly List<Trader.TradeItem> Stock = new List<Trader.TradeItem>();
+        private static readonly List<Trader.TradeItem> LegacyStock = new List<Trader.TradeItem>();
+        private static bool _legacy;
 
         public static void Register()
         {
@@ -95,6 +97,10 @@ namespace GoblinPack
             Trader trader = prefab.AddComponent<Trader>();
             trader.m_name = "Sean";
             trader.m_items = new List<Trader.TradeItem>(Stock);
+            if (Cfg.SellWeatherGear.Value)
+            {
+                trader.m_items.AddRange(LegacyStock);
+            }
             R.Set(trader, "m_standRange", 6f);
             R.Set(trader, "m_greetRange", 5f);
             R.Set(trader, "m_byeRange", 7f);
@@ -133,8 +139,19 @@ namespace GoblinPack
         private static void AddItems()
         {
             Stock.Clear();
+            LegacyStock.Clear();
 
-            // Weather charms: utility-slot trinkets with resistances.
+            // Sean's shop, in display order.
+            AddSoda();
+            AddMerch();
+            AddGlock();
+            AddRestrainingOrder();
+            AddDiddyOil();
+            AddSixtySeven();
+
+            // The original weather gear. Still registered so existing copies don't vanish from
+            // inventories; only sold when Sean.SellWeatherGear is on.
+            _legacy = true;
             AddCharm("GP_StormCharm", "Stormcaller's Charm",
                 "A bead of trapped thunder. Lightning bends around the wearer, and stamina returns faster in the rush of the storm.",
                 220, HitData.DamageType.Lightning, staminaRegen: 1.15f);
@@ -144,16 +161,12 @@ namespace GoblinPack
             AddCharm("GP_SunCharm", "Sunshard Talisman",
                 "A sliver of a summer afternoon. Fire resistance and a little extra healing.",
                 240, HitData.DamageType.Fire, staminaRegen: 1f, healthRegen: 1.15f);
-
-            // Bottled weather: consumables that change the sky for the drinker.
             AddBottledWeather("GP_BottledSunshine", "Bottled Sunshine",
                 "Uncork for five minutes of clear skies. Only you will see them. Sean insists this is a feature.",
                 90, "Clear", 300f);
             AddBottledWeather("GP_BottledStorm", "Bottled Thunderstorm",
                 "For when you want the mood without the commitment. Three minutes of storm, just for you.",
                 60, "ThunderStorm", 180f);
-
-            // Weather-forged weapons.
             AddWeapon("GP_ThunderclapAxe", "AxeIron", "Thunderclap Axe",
                 "An iron axe that hums before rain. Adds lightning damage.", 450,
                 d => { d.m_lightning += 25f; return d; });
@@ -166,6 +179,158 @@ namespace GoblinPack
             AddWeapon("GP_SquallBow", "BowFineWood", "Squall Bow",
                 "Strung with rain-soaked sinew. Adds frost damage to every shot.", 550,
                 d => { d.m_frost += 12f; return d; });
+            _legacy = false;
+        }
+
+        /// <summary>
+        /// "Restraining Order": a belt (utility slot, like Megingjord). Joe must keep his distance from
+        /// the wearer (see RestrainingOrder / JoeBrain). The equip effect has no stats; it just puts an
+        /// icon in the buff bar so the wearer can see the order is in force.
+        /// </summary>
+        private static void AddRestrainingOrder()
+        {
+            var item = new CustomItem(RestrainingOrder.PrefabName, "BeltStrength");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Restraining Order";
+            shared.m_description = "A belt with the court order stapled to it. Joe has to stay 15 metres away from you. " +
+                                   "Void if you hit him. Does not cover the Baby Wars.";
+            shared.m_itemType = ItemDrop.ItemData.ItemType.Utility;
+            shared.m_weight = 1f;
+
+            SE_Stats order = ScriptableObject.CreateInstance<SE_Stats>();
+            order.name = "GP_SE_RestrainingOrder";
+            order.m_name = "Restraining Order";
+            order.m_tooltip = "Joe must stay 15 metres away from you.";
+            order.m_icon = shared.m_icons != null && shared.m_icons.Length > 0 ? shared.m_icons[0] : null;
+            ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(order, false));
+            shared.m_equipStatusEffect = order;
+
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 300);
+        }
+
+        /// <summary>"Diddy Oil": a potion: faster movement and a bigger parry bonus.</summary>
+        private static void AddDiddyOil()
+        {
+            var item = new CustomItem("GP_DiddyOil", "MeadHealthMinor");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Diddy Oil";
+            shared.m_description = "Slippery. +25% movement speed and a much stronger parry for 5 minutes.";
+
+            SE_Stats oil = ScriptableObject.CreateInstance<SE_Stats>();
+            oil.name = "GP_SE_DiddyOil";
+            oil.m_name = "Diddy Oil";
+            oil.m_tooltip = "+25% movement speed, +100% parry bonus.";
+            oil.m_icon = shared.m_icons != null && shared.m_icons.Length > 0 ? shared.m_icons[0] : null;
+            oil.m_ttl = 300f;
+            oil.m_speedModifier = 0.25f;
+            oil.m_timedBlockBonus = 1f;
+            ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(oil, false));
+            shared.m_consumeStatusEffect = oil;
+
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 120, stack: 3);
+        }
+
+        /// <summary>"67": end-game fist weapon, built on the Flesh Rippers claws.</summary>
+        private static void AddSixtySeven()
+        {
+            var item = new CustomItem("GP_SixtySeven", "FistFenrirClaw");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "67";
+            shared.m_description = "Six. Seven. End-game fists. Sean won't say where he got them.";
+            var damage = new HitData.DamageTypes { m_slash = 160f, m_blunt = 67f, m_lightning = 30f };
+            shared.m_damages = damage;
+            shared.m_damagesPerLevel = new HitData.DamageTypes { m_slash = 7f, m_blunt = 6f, m_lightning = 2f };
+            shared.m_attackForce = Mathf.Max(shared.m_attackForce, 67f);
+            shared.m_maxDurability = 670f;
+            shared.m_durabilityPerLevel = 67f;
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 6767);
+        }
+
+        // ------------------------------------------------------------------ Sean's merch line
+
+        /// <summary>"Soda": a drink-bottle model turned into food: +35 health, +150 stamina.</summary>
+        private static void AddSoda()
+        {
+            var item = new CustomItem("GP_Soda", "MeadStaminaMinor");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Soda";
+            shared.m_description = "Sean's own brand. Tastes like a thunderstorm. +35 health, +150 stamina.";
+            // Meads work through a status effect; food works through these fields. Make it food.
+            shared.m_consumeStatusEffect = null;
+            shared.m_food = 35f;
+            shared.m_foodStamina = 150f;
+            shared.m_foodEitr = 0f;
+            shared.m_foodRegen = 2f;
+            shared.m_foodBurnTime = 1200f;
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 25, stack: 5);
+        }
+
+        /// <summary>"Merch": a black chest piece with no stats at all.</summary>
+        private static void AddMerch()
+        {
+            var item = new CustomItem("GP_Merch", "ArmorLeatherChest");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Merch";
+            shared.m_description = "Official Sean merch. It's black. It does nothing. It's drip.";
+            shared.m_armor = 0f;
+            shared.m_armorPerLevel = 0f;
+            shared.m_movementModifier = 0f;
+            shared.m_useDurability = false;
+            shared.m_weight = 1f;
+            shared.m_equipStatusEffect = null;
+
+            // Worn look comes from the armor material; the dropped look from the prefab's renderers.
+            shared.m_armorMaterial = Blacken(shared.m_armorMaterial);
+            foreach (Renderer renderer in item.ItemPrefab.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] materials = renderer.sharedMaterials;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    materials[i] = Blacken(materials[i]);
+                }
+                renderer.sharedMaterials = materials;
+            }
+
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 60);
+        }
+
+        private static Material Blacken(Material original)
+        {
+            if (original == null)
+            {
+                return null;
+            }
+            var black = new Material(original) { name = original.name + "_GPBlack" };
+            if (black.HasProperty("_Color"))
+            {
+                black.color = new Color(0.07f, 0.07f, 0.07f, 1f);
+            }
+            else
+            {
+                GoblinPackPlugin.Log.LogWarning($"Merch: material {original.name} has no _Color; it may not look black.");
+            }
+            return black;
+        }
+
+        /// <summary>"Glock": an Arbalest with the reload removed, so it fires as fast as you click.</summary>
+        private static void AddGlock()
+        {
+            var item = new CustomItem("GP_Glock", "CrossbowArbalest");
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Glock";
+            shared.m_description = "Semi-automatic. Sean says it's for 'weather emergencies'. Uses bolts.";
+            Attack attack = shared.m_attack;
+            attack.m_requiresReload = false;
+            attack.m_reloadTime = 0f;
+            attack.m_reloadStaminaDrain = 0f;
+            attack.m_attackStamina = Mathf.Min(attack.m_attackStamina, 4f);
+            ItemManager.Instance.AddItem(item);
+            AddStock(item, 750);
         }
 
         private static void AddCharm(string id, string name, string description, int price,
@@ -237,7 +402,7 @@ namespace GoblinPack
 
         private static void AddStock(CustomItem item, int price, int stack = 1)
         {
-            Stock.Add(new Trader.TradeItem { m_prefab = item.ItemDrop, m_stack = stack, m_price = price });
+            (_legacy ? LegacyStock : Stock).Add(new Trader.TradeItem { m_prefab = item.ItemDrop, m_stack = stack, m_price = price });
         }
     }
 
