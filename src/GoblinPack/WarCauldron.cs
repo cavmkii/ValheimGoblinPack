@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
+using HarmonyLib;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using UnityEngine;
@@ -9,9 +12,20 @@ namespace GoblinPack
     /// <summary>
     /// Joe's war cauldron. Use an item on it from the hotbar (like an offering bowl) to curse his
     /// next wave of babies. The item is consumed; the server applies the curse to the next wave.
+    ///
+    /// The hover/interact plumbing is the game's own <see cref="Switch"/> component: implementing the
+    /// game's Hoverable/Interactable interfaces directly breaks whenever a game update adds a member
+    /// to them (1.0.16 added Hoverable.GetHoverOffset). We only hand Switch a callback, via reflection.
     /// </summary>
-    public class WarCauldron : MonoBehaviour, Hoverable, Interactable
+    public class WarCauldron : MonoBehaviour
     {
+        internal static string HoverTextFor() => HoverText;
+
+        private const string HoverText =
+            "Joe's War Cauldron\n" +
+            "Use an item on it (hotbar key while looking at it) to curse the next wave:\n" +
+            "Pukeberries: they puke  |  Thistle: they're slow  |  Troll hide: heavy and weak";
+
         private static readonly Dictionary<string, Curse> Offerings = new Dictionary<string, Curse>
         {
             ["Pukeberries"] = Curse.Puke,
@@ -19,30 +33,47 @@ namespace GoblinPack
             ["TrollHide"] = Curse.Heavy,
         };
 
-        public string GetHoverName() => "Joe's War Cauldron";
+        private static readonly FieldInfo OnUseField = AccessTools.Field(typeof(Switch), "m_onUse");
+        private static readonly MethodInfo OnUseMethod = AccessTools.Method(typeof(WarCauldron), nameof(OnUse));
 
-        public string GetHoverText()
+        private void Awake()
         {
-            return "Joe's War Cauldron\n" +
-                   "Use an item on it (hotbar key while looking at it) to curse the next wave:\n" +
-                   "Pukeberries: they puke  |  Thistle: they're slow  |  Troll hide: heavy and weak";
-        }
-
-        public bool Interact(Humanoid user, bool hold, bool alt)
-        {
-            if (!hold && user is Player player)
+            Switch sw = GetComponent<Switch>();
+            if (sw == null || OnUseField == null || OnUseMethod == null)
             {
-                Rpc.Notify(player, "Offer Pukeberries, Thistle or Troll hide to curse Joe's next wave.");
+                GoblinPackPlugin.Log.LogWarning("War cauldron: Switch hook unavailable; offerings disabled.");
+                return;
             }
-            return false;
+            // Delegates aren't serialized on prefabs, so hook up the callback per instance.
+            OnUseField.SetValue(sw, Delegate.CreateDelegate(OnUseField.FieldType, this, OnUseMethod));
         }
 
-        public bool UseItem(Humanoid user, ItemDrop.ItemData item)
+        /// <summary>Switch callback: item is null for a plain interact (E), set for a hotbar use.</summary>
+        private bool OnUse(Switch caller, Humanoid user, ItemDrop.ItemData item)
         {
-            if (!(user is Player player) || item == null)
+            try
+            {
+                return HandleUse(user, item);
+            }
+            catch (Exception e)
+            {
+                GoblinPackPlugin.Log.LogError($"War cauldron: {e}");
+                return false;
+            }
+        }
+
+        private static bool HandleUse(Humanoid user, ItemDrop.ItemData item)
+        {
+            if (!(user is Player player))
             {
                 return false;
             }
+            if (item == null)
+            {
+                Rpc.Notify(player, "Offer Pukeberries, Thistle or Troll hide to curse Joe's next wave.");
+                return false;
+            }
+
             string prefab = item.m_dropPrefab != null ? item.m_dropPrefab.name : "";
             if (!Offerings.TryGetValue(prefab, out Curse curse))
             {
@@ -127,6 +158,9 @@ namespace GoblinPack
             }
             if (interactable)
             {
+                Switch sw = prefab.AddComponent<Switch>();
+                R.Set(sw, "m_name", "Joe's War Cauldron");
+                R.Set(sw, "m_hoverText", WarCauldron.HoverTextFor());
                 prefab.AddComponent<WarCauldron>();
             }
 
