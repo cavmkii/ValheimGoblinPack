@@ -35,6 +35,7 @@ namespace GoblinPack
             rpc.Register<ZPackage>(Steal, OnSteal);
             rpc.Register<ZPackage>(Stash, OnStash);
             rpc.Register<ZPackage>(Summon, OnSummon);
+            BabyWar.Register(rpc);
         }
 
         // ---- server -> everyone: positions and rage, so owners of Joe can find Sean across the map
@@ -89,6 +90,7 @@ namespace GoblinPack
             GoblinState.RageUntil = GoblinState.Now + Cfg.RageSeconds.Value;
             GoblinState.RageTarget = playerId;
             GoblinState.RageOrigin = origin;
+            BabyWar.NoteRage(playerId, origin);
 
             // Routed RPCs to Everybody can arrive twice on a listen server; only yell once.
             if (GoblinState.Now - _lastRageYell < 3d)
@@ -204,7 +206,7 @@ namespace GoblinPack
             WorldDirector.Summon(who, position);
         }
 
-        private static bool IsAdminOrHost(long sender)
+        internal static bool IsAdminOrHost(long sender)
         {
             if (sender == ZDOMan.GetSessionID())
             {

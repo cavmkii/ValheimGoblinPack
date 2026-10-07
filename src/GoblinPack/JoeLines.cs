@@ -87,6 +87,33 @@ namespace GoblinPack
                 "My lawyer will hear about this, {player}. My lawyer is also me.",
                 "This order doesn't cover the Baby Wars and you KNOW it.",
             },
+            ["war_start"] = new[]
+            {
+                "YOU SAID IT. YOU SAID IT THREE TIMES. THE BABY WARS ARE BACK!",
+                "Babies! To me! This is what we trained for!",
+                "I told you not to say it, {player}. I TOLD you.",
+            },
+            ["war_wave"] = new[]
+            {
+                "NEXT WAVE! Diapers ON!",
+                "Send in the Grenadiers! Bottles UP!",
+                "For every baby that falls, two more shall... also fall, probably. CHARGE!",
+                "Binky Berserkers! Show them what teething really means!",
+            },
+            ["war"] = new[]
+            {
+                "Hold the line, babies! Hold it! What's a line? HOLD IT ANYWAY!",
+                "{player}, put on a bonnet or get out of my war!",
+                "Sean brought SECURITY? To a BABY WAR? Coward!",
+                "I've seen things in the Baby Wars, {player}. Diapers. So many diapers.",
+                "Nobody touches the cauldron! Especially not with Pukeberries!",
+            },
+            ["war_end"] = new[]
+            {
+                "This isn't over! The Baby Wars are never over!",
+                "Fall back! Regroup! Nap time!",
+                "Sean will pay for this. Sean will pay for ALL of this.",
+            },
             ["puke"] = new[]
             {
                 "Sean's soup. It was Sean's soup. BLARGH!",

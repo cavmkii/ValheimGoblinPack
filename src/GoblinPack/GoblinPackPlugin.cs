@@ -15,7 +15,7 @@ namespace GoblinPack
     {
         public const string PluginGuid = "cavmkii.goblinpack";
         public const string PluginName = "GoblinPack";
-        public const string PluginVersion = "0.5.1";
+        public const string PluginVersion = "0.6.0";
 
         internal static GoblinPackPlugin Instance;
         internal static ManualLogSource Log;
@@ -76,8 +76,9 @@ namespace GoblinPack
             try
             {
                 PowerLevel.TickLocalPlayer();
-                RestrainingOrder.TickLocalPlayer();
+                WornItems.TickLocalPlayer();
                 WorldDirector.Tick();
+                BabyWar.Tick();
             }
             catch (Exception e)
             {

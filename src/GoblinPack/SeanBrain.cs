@@ -107,6 +107,19 @@ namespace GoblinPack
                 return;
             }
 
+            if (BabyWar.Active)
+            {
+                // Hold position behind his Security and shout at everyone.
+                _wander.ClearDestination();
+                _wander.SetAnchor(pos, 3f);
+                if (Time.time >= _nextPitch && Player.GetClosestPlayer(pos, 60f) != null)
+                {
+                    _nextPitch = Time.time + Random.Range(12f, 22f);
+                    Speech.Say(_nview, Lines.Pick(Lines.SeanWar), true);
+                }
+                return;
+            }
+
             Player customer = Player.GetClosestPlayer(pos, 15f);
             if (customer != null)
             {

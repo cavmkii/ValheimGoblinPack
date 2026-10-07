@@ -40,6 +40,36 @@ A travelling Dvergr merchant (cloned from the ice mage) who sells weather-themed
 
 The original weather gear (three charms, Bottled Sunshine/Thunderstorm and four weather weapons) still exists in the game, so nobody loses copies they already own, but Sean only sells it if `Sean.SellWeatherGear = true` (read at game start).
 
+## The Baby Wars
+
+Say "baby wars" in chat three times within an hour (anyone, in total; `BabyWars.TriggerCount` / `TriggerWindowMinutes`) and the war starts near whoever said it last:
+
+- Everyone sees **THE BABY WARS HAVE BEGUN** and the sky turns to thunderstorm until it's over.
+- **Joe** sets up a war camp 25–40 m away (cauldron, totem, banners) and commands from it.
+- **Joe's baby army** pours out of the camp in waves (4 by default, 6 babies then +3 each wave). Next wave comes after 75 s, or sooner once most of the current one is dead:
+  - **Diaper Commando:** a Fuling at 0.4x.
+  - **Bottle Grenadier:** a Fuling shaman at 0.45x.
+  - **Binky Berserker:** a Fuling berserker at 0.6x, from wave 2.
+
+  They scale with progression like Joe (`BabyHealthScale` / `BabyDamageScale`) and drop only a few coins, so there's no Fuling-loot farming.
+- **Sean** arrives on the far side with **Sean's Security** (3 Dvergr guards), who fight the babies.
+- **Picking a side:**
+  - **Baby Bonnet:** Joe drops one into the pack of everyone who said the phrase. Babies and Joe leave you alone, and Sean's Security attacks you.
+  - **Merch:** Sean's shirt. Security leaves you alone, and the babies still come for you.
+  - **Neither:** everyone attacks you.
+- **Curse the next wave** at **Joe's War Cauldron**: look at it and press a hotbar key holding one of these items, the same way you use an offering bowl.
+  - **Pukeberries:** the babies keep stopping to throw up.
+  - **Thistle:** they're half speed.
+  - **Troll hide:** they're slower and hit 40% softer.
+
+  Curses stack, and the whole camp is told who cursed the wave.
+- **How it ends:**
+  - The last wave dies: the players win.
+  - Joe dies: the babies scatter.
+  - 15 minutes pass: Joe "declares victory".
+
+  Either way, the camp, babies and guards disappear, and there's a 30-minute cooldown before the next war.
+
 ## When Joe meets Sean
 
 When the two get within 35 m of each other, they fight for 45 s:
@@ -86,6 +116,7 @@ This writes `dist\GoblinPack-0.1.0.zip`; the build output prints the full path. 
 - `goblinpack_where`: Joe's and Sean's last known positions, and whether Joe is enraged.
 - `goblinpack_summon joe|sean`: cheat command (devcommands; the server also checks that you're an admin). Replaces Joe or Sean with a fresh one in front of you. Handy for testing a fight: summon both.
 - `goblinpack_reloadlines`: reload Joe's dialogue from `joe_lines.txt`.
+- `goblinpack_babywars start|stop`: cheat (devcommands; the server also checks you're an admin). Start the Baby Wars at your position, or call them off.
 
 ## How it works (code map)
 
