@@ -183,36 +183,27 @@ namespace GoblinPack
         }
 
         /// <summary>
-        /// "Restraining Order": a trinket. Joe must keep his distance from the wearer (see
-        /// RestrainingOrder / JoeBrain). As a trinket it also builds adrenaline; when full, the wearer
-        /// gets "Cease and Desist": a few seconds of physical damage resistance.
+        /// "Restraining Order": a belt (utility slot, like Megingjord). Joe must keep his distance from
+        /// the wearer (see RestrainingOrder / JoeBrain). The equip effect has no stats; it just puts an
+        /// icon in the buff bar so the wearer can see the order is in force.
         /// </summary>
         private static void AddRestrainingOrder()
         {
             var item = new CustomItem(RestrainingOrder.PrefabName, "BeltStrength");
             ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
             shared.m_name = "Restraining Order";
-            shared.m_description = "Signed, stamped, and laminated. Joe has to stay 15 metres away from you. " +
+            shared.m_description = "A belt with the court order stapled to it. Joe has to stay 15 metres away from you. " +
                                    "Void if you hit him. Does not cover the Baby Wars.";
-            shared.m_itemType = ItemDrop.ItemData.ItemType.Trinket;
-            shared.m_equipStatusEffect = null;
-            shared.m_weight = 0.1f;
+            shared.m_itemType = ItemDrop.ItemData.ItemType.Utility;
+            shared.m_weight = 1f;
 
-            SE_Stats cease = ScriptableObject.CreateInstance<SE_Stats>();
-            cease.name = "GP_SE_CeaseAndDesist";
-            cease.m_name = "Cease and Desist";
-            cease.m_tooltip = "Legally protected: resistant to physical damage.";
-            cease.m_icon = shared.m_icons != null && shared.m_icons.Length > 0 ? shared.m_icons[0] : null;
-            cease.m_ttl = 8f;
-            cease.m_mods = new List<HitData.DamageModPair>
-            {
-                new HitData.DamageModPair { m_type = HitData.DamageType.Blunt, m_modifier = HitData.DamageModifier.Resistant },
-                new HitData.DamageModPair { m_type = HitData.DamageType.Slash, m_modifier = HitData.DamageModifier.Resistant },
-                new HitData.DamageModPair { m_type = HitData.DamageType.Pierce, m_modifier = HitData.DamageModifier.Resistant },
-            };
-            ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(cease, false));
-            shared.m_fullAdrenalineSE = cease;
-            shared.m_maxAdrenaline = 40f;
+            SE_Stats order = ScriptableObject.CreateInstance<SE_Stats>();
+            order.name = "GP_SE_RestrainingOrder";
+            order.m_name = "Restraining Order";
+            order.m_tooltip = "Joe must stay 15 metres away from you.";
+            order.m_icon = shared.m_icons != null && shared.m_icons.Length > 0 ? shared.m_icons[0] : null;
+            ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(order, false));
+            shared.m_equipStatusEffect = order;
 
             ItemManager.Instance.AddItem(item);
             AddStock(item, 300);

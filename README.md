@@ -34,7 +34,7 @@ A travelling Dvergr merchant (cloned from the ice mage) who sells weather-themed
 | Soda ×5 | food | +35 health, +150 stamina (20 min) | 25 |
 | Merch | chest | black, no armor, no stats | 60 |
 | Glock | crossbow | semi-automatic Arbalest: no reload, uses bolts | 750 |
-| Restraining Order | trinket | Joe must stay 15 m away from you: no stealing, no taunting, he backs off. Void if you hit him; doesn't cover the Baby Wars rage. Full adrenaline triggers *Cease and Desist* (8 s physical resistance) | 300 |
+| Restraining Order | belt | Joe must stay 15 m away from you: no stealing, no taunting, he backs off. Void if you hit him; doesn't cover the Baby Wars rage | 300 |
 | Diddy Oil ×3 | potion | +25% movement speed, +100% parry bonus for 5 min | 120 |
 | 67 | fists | end-game: 160 slash, 67 blunt, 30 lightning (+ per upgrade level) | 6767 |
 
