@@ -70,6 +70,10 @@ Say "baby wars" in chat three times within an hour (anyone, in total; `BabyWars.
 
   Either way, the camp, babies and guards disappear, and there's a 30-minute cooldown before the next war.
 
+## Snow
+
+When it starts snowing where you are, your character says "awe man the sky is cumming!" in normal chat. It shows above your head for nearby players. It happens once per snowfall, at most every 10 minutes. You can turn it off or change the line under `[Fun]`: `SnowLineEnabled`, `SnowLine`, `SnowLineCooldownMinutes`.
+
 ## When Joe meets Sean
 
 When the two get within 35 m of each other, they fight for 45 s:

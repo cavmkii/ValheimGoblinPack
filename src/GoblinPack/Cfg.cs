@@ -54,6 +54,11 @@ namespace GoblinPack
         public static ConfigEntry<float> RestrainingDistance;
         public static ConfigEntry<float> SeanNonPlayerDamageTaken;
 
+        // Fun
+        public static ConfigEntry<bool> SnowLineEnabled;
+        public static ConfigEntry<string> SnowLine;
+        public static ConfigEntry<float> SnowLineCooldownMinutes;
+
         // Baby Wars
         public static ConfigEntry<bool> WarEnabled;
         public static ConfigEntry<int> WarTriggerCount;
@@ -108,6 +113,9 @@ namespace GoblinPack
             SeanHealth = B(config, "Sean", "Health", 3000f, "Sean's max health.");
             SeanNonPlayerDamageTaken = B(config, "Sean", "NonPlayerDamageTaken", 0.1f, "Multiplier on damage Sean takes from ordinary monsters, so wolves don't keep killing the shop.");
 
+            SnowLineEnabled = B(config, "Fun", "SnowLineEnabled", true, "Your character says SnowLine in chat when it starts snowing.");
+            SnowLine = B(config, "Fun", "SnowLine", "awe man the sky is cumming!", "What your character says when it starts snowing.");
+            SnowLineCooldownMinutes = B(config, "Fun", "SnowLineCooldownMinutes", 10f, "Minimum minutes between snow lines.");
             WarEnabled = B(config, "BabyWars", "Enabled", true, "Saying the rage phrase enough times starts the Baby Wars.");
             WarTriggerCount = B(config, "BabyWars", "TriggerCount", 3, "How many times 'baby wars' must be said (by anyone) within the window to start the war.");
             WarTriggerWindowMinutes = B(config, "BabyWars", "TriggerWindowMinutes", 60f, "The window for TriggerCount, in minutes.");
